@@ -1283,8 +1283,6 @@ input[type="range"] {
   &.ready {
     opacity: 1;
   }
-  // The sizing probe is as wide as the longest line at full size.
-  overflow-x: clip;
 
   > #stage,
   > .legend {
@@ -1315,9 +1313,9 @@ input[type="range"] {
     white-space: normal;
   }
 
-  &:focus-visible {
-    outline-offset: 12px;
-  }
+  // Its ring stands clear of the letters, rounded like the bar's.
+  border-radius: 12px;
+  outline-offset: 12px;
 
   // A column in focus: its letter alone stays in ink.
   [data-i] {
@@ -1329,9 +1327,10 @@ input[type="range"] {
   }
 }
 
-// Set like the line, out of sight, to size it.
+// Set like the line, out of sight, to size it. As wide as the longest
+// line at full size, so fixed, where it can't widen the page.
 .probe {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: max-content;

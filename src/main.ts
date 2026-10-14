@@ -507,7 +507,12 @@ sheet.addEventListener("focusout", (e) => {
 });
 
 // A click goes on to the next line now; your own line just plays again.
-stage.addEventListener("click", cycle);
+// Clicked or tapped, it doesn't keep focus, so a key pressed after never
+// rings it; from the keyboard it does.
+stage.addEventListener("click", (e) => {
+  if (e.detail > 0) stage.blur();
+  cycle();
+});
 
 // Settings: the bar above the sheet, and its tuning panel.
 const inputs = ["hold", "stagger", "match", "heat", "spill"] as const;
