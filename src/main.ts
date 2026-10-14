@@ -378,8 +378,13 @@ const drawIndex = (pools: Frame["pools"]) => {
 const fillIndex = (pools: Frame["pools"], fresh: boolean) => {
   const text = [...d.text];
   index.replaceChildren();
-  // Each letter once: a second N says nothing the first didn't.
+  // Each letter once: a second N says nothing the first didn't, so the
+  // first carries how many there are.
   const seen = new Set<string>();
+  const times = new Map<string, number>();
+  pools.forEach((pool, i) => {
+    if (pool) times.set(text[i], (times.get(text[i]) ?? 0) + 1);
+  });
   entries = pools.map((pool, i) => {
     if (!pool || seen.has(text[i])) return null;
     seen.add(text[i]);
@@ -397,6 +402,13 @@ const fillIndex = (pools: Frame["pools"], fresh: boolean) => {
     const ch = document.createElement("span");
     ch.className = "ch";
     ch.textContent = text[i];
+    const n = times.get(text[i]) ?? 1;
+    if (n > 1) {
+      const x = document.createElement("span");
+      x.className = "times";
+      x.textContent = `×${n}`;
+      ch.append(x);
+    }
     const about = document.createElement("span");
     about.className = "about";
     about.textContent = `${w}\u00A0px · ${pool.length}`;

@@ -1679,6 +1679,19 @@ input[type="range"] {
     line-height: 1;
   }
 
+  // How many of it the line has, when it's more than one: under the
+  // letter, set like its measurements.
+  .times {
+    display: block;
+    margin-top: 0.35em;
+    font-family: var(--font-mono);
+    font-size: 0.45em;
+    font-weight: 400;
+    font-variation-settings: normal;
+    letter-spacing: 0;
+    color: var(--text);
+  }
+
   .about {
     font-family: var(--font-mono);
     font-size: 0.77em;
@@ -1717,7 +1730,7 @@ input[type="range"] {
   }
 
   .entry {
-    grid-template-columns: 1.5em 5.4em minmax(0, 1fr);
+    grid-template-columns: 2.6em 5.4em minmax(0, 1fr);
     align-items: baseline;
     column-gap: 0.5em;
     padding: 0.4em 0.5em;
@@ -1735,6 +1748,13 @@ input[type="range"] {
     .ch {
       grid-row: auto;
       font-size: 1.3em;
+    }
+
+    // Beside the letter, on its line.
+    .times {
+      display: inline;
+      margin: 0 0 0 0.3em;
+      font-size: 0.55em;
     }
 
     .pool {
