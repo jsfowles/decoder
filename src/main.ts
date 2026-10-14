@@ -283,7 +283,7 @@ const drawColumns = (pools: Frame["pools"]) => {
       nodes[k] = col;
     }
     col.classList.toggle("narrow", at.w < 24);
-    col.style.transform = `translateX(${at.x - at.w / 2}px)`;
+    col.style.transform = `translateX(${at.x}px) translateX(-50%)`;
     col.style.width = `${at.w}px`;
     col.dataset.width = String(Math.round(at.w));
     col.dataset.x = String(at.x);

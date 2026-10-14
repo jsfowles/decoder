@@ -1430,9 +1430,10 @@ input[type="range"] {
   font-variation-settings: "opsz" 24;
   line-height: 1.18;
   color: var(--pool);
+  // Its middle glides to the new letter's, by transform alone; its width
+  // snaps, under a bracket that's drawn in while the letter scrambles.
   transition:
     transform var(--duration-move) var(--ease-out),
-    width var(--duration-move) var(--ease-out),
     color var(--duration-base) var(--ease-out),
     opacity var(--duration-base) var(--ease-out);
 
