@@ -1822,6 +1822,68 @@ input[type="range"] {
   }
 }
 
+// Pause, at the end of what to try: a word and its sign, quiet until
+// you're on it. The sign turns from bars to a triangle as it pauses.
+.pause {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  // Spaced by the word space before it, so on a line of its own it starts
+  // at the text's edge.
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    var(--focus-fade);
+
+  @include hover {
+    &:hover {
+      color: var(--text);
+    }
+  }
+
+  svg {
+    align-self: center;
+    // The sign's own inset, taken back so its edge meets the text's.
+    margin-left: -1.5px;
+    fill: currentColor;
+    overflow: visible;
+  }
+
+  .bars,
+  .tri {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+      opacity var(--duration-fast) var(--ease-out),
+      scale var(--duration-base) var(--ease-out);
+  }
+
+  .tri {
+    opacity: 0;
+    scale: 0.6;
+  }
+
+  &[data-paused] {
+    .bars {
+      opacity: 0;
+      scale: 0.6;
+    }
+
+    .tri {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bars,
+    .tri {
+      scale: 1;
+    }
+  }
+}
+
 .legend-try {
   margin-left: auto;
 

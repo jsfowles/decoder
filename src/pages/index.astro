@@ -581,13 +581,28 @@ const value = (id: Field["id"]) =>
         </p>
         <p class="legend-try">
           <span class="k">Try</span>
-          <span id="hint">
-            <span class="by-pointer">
-              Click the line for the next one, or run the pointer across it.
+          <span>
+            <span id="hint">
+              <span class="by-pointer">
+                Click the line for the next one, or run the pointer across it.
+              </span>
+              <span class="by-touch">
+                Tap the line for the next one, or drag across it.
+              </span>
             </span>
-            <span class="by-touch">
-              Tap the line for the next one, or drag across it.
-            </span>
+            <button class="pause" id="pause" type="button">
+              <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">
+                <g class="bars">
+                  <rect x="1.5" y="1" width="2.4" height="8" rx="0.6"></rect>
+                  <rect x="6.1" y="1" width="2.4" height="8" rx="0.6"></rect>
+                </g>
+                <path
+                  class="tri"
+                  d="M2 1.2v7.6a.6.6 0 0 0 .9.5l6-3.8a.6.6 0 0 0 0-1L2.9.7A.6.6 0 0 0 2 1.2z"
+                ></path>
+              </svg>
+              <span class="pause-text">Pause</span>
+            </button>
           </span>
         </p>
       </footer>

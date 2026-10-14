@@ -83,6 +83,9 @@ const decoding = (on: boolean) => {
 };
 // The pointer is on the line: the next line waits until it leaves.
 let over = false;
+// Paused, it stays on a line until you click for the next. It starts that
+// way for anyone who's asked for less motion.
+let paused = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // The columns under the letters, drawn for one text and one set of pools.
 type Col = {
@@ -454,13 +457,19 @@ const light = (f: Frame) => {
     });
 };
 
+// The next line, after a rest: unless it's paused, or you're over it.
+const later = () => {
+  clearTimeout(timer);
+  if (!paused && !over) timer = window.setTimeout(cycle, REST);
+};
+
 const onFrame = (f: Frame) => {
   last = f;
   if (f.pools !== drawnPools) drawColumns(f.pools);
   light(f);
   if (f.settled && running) {
     decoding(false);
-    if (!over) timer = window.setTimeout(cycle, REST);
+    later();
   }
 };
 
@@ -487,10 +496,7 @@ const wait = () => {
 };
 const carryOn = () => {
   over = false;
-  if (!running) {
-    clearTimeout(timer);
-    timer = window.setTimeout(cycle, REST);
-  }
+  if (!running) later();
 };
 sheet.addEventListener("pointerenter", wait);
 // Only keyboard focus holds it: a click or tap on the line focuses it too.
@@ -505,6 +511,20 @@ sheet.addEventListener("focusout", (e) => {
   if (!sheet.contains(e.relatedTarget as Node) && !sheet.matches(":hover"))
     carryOn();
 });
+
+// Pause holds the line where it is; Play goes on from it.
+const pauseButton = $<HTMLButtonElement>("pause");
+const showPaused = () => {
+  pauseButton.toggleAttribute("data-paused", paused);
+  say(pauseButton.querySelector(".pause-text")!, paused ? "Play" : "Pause");
+};
+pauseButton.addEventListener("click", () => {
+  paused = !paused;
+  showPaused();
+  if (paused) clearTimeout(timer);
+  else if (!running) cycle();
+});
+showPaused();
 
 // A click goes on to the next line now; your own line just plays again.
 // Clicked or tapped, it doesn't keep focus, so a key pressed after never
@@ -1040,10 +1060,7 @@ const relayout = () => {
   place(d.text);
   d.land(d.text);
   measure();
-  if (!running && !over) {
-    clearTimeout(timer);
-    timer = window.setTimeout(cycle, REST);
-  }
+  if (!running) later();
 };
 
 let resized = 0;
