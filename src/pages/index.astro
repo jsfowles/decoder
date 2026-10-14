@@ -1,0 +1,600 @@
+---
+import "@fontsource-variable/geist";
+import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
+import "@fontsource-variable/geist-mono";
+import "@fontsource-variable/newsreader/opsz.css";
+import "@fontsource/libre-caslon-display";
+import "@fontsource-variable/big-shoulders-display";
+import "@fontsource-variable/unbounded";
+import "@fontsource-variable/jetbrains-mono";
+import "../styles/index.scss";
+import { DEFAULTS } from "../decode";
+import { ALPHABETS, CASES, FACES, FEELS } from "../choices";
+
+const description =
+  "Decoder: text that settles letter by letter, each one scrambling only through look-alikes of its own width, so the line never moves. Tune it, then copy one file.";
+
+// The tuning panel's sliders, grouped by when they act, each saying what
+// it does. Letting go of one shows it: the line plays, or the pointer
+// runs across it.
+const groups = [
+  {
+    label: "As the line plays",
+    fields: [
+      {
+        id: "hold",
+        label: "Hold",
+        help: "How long each letter scrambles before it lands.",
+        min: 1,
+        max: 40,
+        step: 1,
+      },
+      {
+        id: "stagger",
+        label: "Stagger",
+        help: "The wait between one letter landing and the next.",
+        min: 0,
+        max: 8,
+        step: 0.5,
+      },
+    ],
+  },
+  {
+    label: "What it scrambles through",
+    fields: [
+      {
+        id: "match",
+        label: "Match",
+        help: "How close in width a look-alike must be. Higher lets in more.",
+        min: 1,
+        max: 40,
+        step: 1,
+      },
+    ],
+  },
+  {
+    label: "Under the pointer",
+    fields: [
+      {
+        id: "heat",
+        label: "Heat",
+        help: "How long a letter keeps scrambling once the pointer passes.",
+        min: 1,
+        max: 60,
+        step: 1,
+      },
+      {
+        id: "spill",
+        label: "Spill",
+        help: "How long the letters either side of it scramble too.",
+        min: 0,
+        max: 40,
+        step: 1,
+      },
+    ],
+  },
+] as const;
+type Field = (typeof groups)[number]["fields"][number];
+const value = (id: Field["id"]) =>
+  id === "match" ? Math.round(DEFAULTS.match * 100) : DEFAULTS[id];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Decoder</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f3f3f0" />
+    <link rel="preload" href={geist} as="font" type="font/woff2" crossorigin />
+    <noscript>
+      <style>
+        .sheet {
+          opacity: 1;
+        }
+      </style>
+    </noscript>
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <a class="skip" href="#stage">
+      Skip to the line
+    </a>
+    <header class="top">
+      <h1 class="name" translate="no">
+        decoder
+      </h1>
+      <nav class="links" aria-label="Decoder">
+        <a href="https://github.com/jsfowles/decoder#readme">Docs</a>
+      </nav>
+    </header>
+
+    <section class="dock" id="dock" aria-label="Your line and its settings">
+      <span class="row-label line-label" aria-hidden="true">
+        Your line
+      </span>
+      <form class="write" id="write">
+        <label class="sr-only" for="own">
+          Your own line
+        </label>
+        <label
+          class="chip pen"
+          for="own"
+          aria-hidden="true"
+          title="Type your own line"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linejoin="round"
+          >
+            <path d="M8.2 1.6 10.4 3.8 4 10.2 1.4 10.6 1.8 8Z" />
+          </svg>
+          <span class="pen-text">Your line</span>
+        </label>
+        <span class="field">
+          <input
+            id="own"
+            name="line"
+            maxlength="32"
+            placeholder="Type your own line…"
+            autocomplete="off"
+            spellcheck="false"
+            enterkeyhint="go"
+          />
+          <button class="go" type="submit" aria-label="Decode it">
+            <kbd aria-hidden="true">↵</kbd>
+          </button>
+        </span>
+      </form>
+      <p class="sr-only" id="status" aria-live="polite"></p>
+      <span class="sep lead" aria-hidden="true"></span>
+      <button
+        id="settings"
+        type="button"
+        class="chip settings"
+        aria-expanded="false"
+        aria-controls="controls"
+        aria-label="Settings"
+        title="Settings"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.3"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M2 4h12M2 8h12M2 12h12" />
+          <circle cx="10.5" cy="4" r="1.6" fill="var(--bg)" />
+          <circle cx="5.5" cy="8" r="1.6" fill="var(--bg)" />
+          <circle cx="9" cy="12" r="1.6" fill="var(--bg)" />
+        </svg>
+      </button>
+      <div class="controls" id="controls" role="group" aria-label="Settings">
+        <span class="row-label" aria-hidden="true">
+          Typeface
+        </span>
+        <span class="drop">
+          <button
+            id="face"
+            title="The typeface the line is set in"
+            type="button"
+            class="chip pick"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="face-menu"
+          >
+            <span class="sr-only">Typeface: </span>
+            <span class="k face-k" aria-hidden="true">
+              Ag
+            </span>
+            <span class="val" translate="no">
+              {FACES.map((f, i) => (
+                <span data-v={f.id} data-on={i === 0 ? "" : undefined}>
+                  {f.label}
+                  <span class="chev" aria-hidden="true"></span>
+                </span>
+              ))}
+            </span>
+          </button>
+          <ul
+            class="pop menu"
+            id="face-menu"
+            role="listbox"
+            tabindex="-1"
+            aria-label="Typeface"
+            translate="no"
+          >
+            {FACES.map((f, i) => (
+              <li
+                role="option"
+                tabindex="-1"
+                data-v={f.id}
+                aria-selected={i === 0 ? "true" : "false"}
+              >
+                <span
+                  class="sample"
+                  aria-hidden="true"
+                  style={`--sample-family: ${f.family}; font-weight: ${f.weight}`}
+                >
+                  Ag
+                </span>
+                {f.label}
+                <svg
+                  class="tick"
+                  width="10"
+                  height="8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  aria-hidden="true"
+                >
+                  <path d="M1 4.2 3.7 7 9 1" />
+                </svg>
+              </li>
+            ))}
+          </ul>
+        </span>
+        <span class="row-label" aria-hidden="true">
+          Size
+        </span>
+        <span class="drop sizer">
+          <button
+            id="size-chip"
+            title="How big the line is set"
+            type="button"
+            class="chip"
+            aria-expanded="false"
+            aria-controls="size-pop"
+          >
+            <span class="k">Size</span>
+            <span class="num" id="size-val">
+              168
+            </span>
+            <span class="unit">px</span>
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="pop slide" id="size-pop" role="group" aria-label="Size">
+            <label class="slider">
+              <span>Size</span>
+              <input
+                id="size"
+                aria-label="Size"
+                type="range"
+                min="16"
+                max="168"
+                step="1"
+                value="168"
+              />
+              <output id="size-out" for="size">
+                168 px
+              </output>
+            </label>
+            <div class="panel-foot">
+              <span class="status" id="fitted">
+                Fits the window
+              </span>
+              <button id="fit" type="button" class="chip copy strong" hidden>
+                Fit to the window
+              </button>
+            </div>
+          </div>
+        </span>
+        <span class="row-label" aria-hidden="true">
+          Case
+        </span>
+        <fieldset
+          class="seg case"
+          id="case"
+          title="Uppercase, lowercase or title case"
+        >
+          <legend class="sr-only">Case</legend>
+          <span class="thumb" aria-hidden="true"></span>
+          {CASES.map((c, i) => (
+            <label title={c.name}>
+              <input
+                class="sr-only"
+                type="radio"
+                name="case"
+                value={c.id}
+                checked={i === 0}
+                aria-label={c.name}
+              />
+              <span aria-hidden="true">{c.label}</span>
+            </label>
+          ))}
+        </fieldset>
+        <span class="drop seg-drop">
+          <button
+            id="case-chip"
+            type="button"
+            class="chip pick"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="case-menu"
+          >
+            <span class="sr-only">Case: </span>
+            <span class="val">
+              {CASES.map((x, i) => (
+                <span data-v={x.id} data-on={i === 0 ? "" : undefined}>
+                  {x.label}
+                  <span class="chev" aria-hidden="true"></span>
+                </span>
+              ))}
+            </span>
+          </button>
+          <ul
+            class="pop menu"
+            id="case-menu"
+            role="listbox"
+            aria-label="Case"
+            tabindex="-1"
+          >
+            {CASES.map((x, i) => (
+              <li
+                role="option"
+                tabindex="-1"
+                data-v={x.id}
+                aria-selected={i === 0 ? "true" : "false"}
+              >
+                <span class="opt">
+                  <b>{x.label}</b>
+                  <small>{x.name}</small>
+                </span>
+                <svg
+                  class="tick"
+                  width="10"
+                  height="8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  aria-hidden="true"
+                >
+                  <path d="M1 4.2 3.7 7 9 1" />
+                </svg>
+              </li>
+            ))}
+          </ul>
+        </span>
+        <span class="row-label" aria-hidden="true">
+          Alphabet
+        </span>
+        <span class="drop">
+          <button
+            id="alphabet"
+            title="The characters a letter can scramble through"
+            type="button"
+            class="chip pick"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="alphabet-menu"
+          >
+            <span class="sr-only">Alphabet: </span>
+            <span class="k" aria-hidden="true">
+              Abc
+            </span>
+            <span class="val">
+              {ALPHABETS.map((a, i) => (
+                <span data-v={a.id} data-on={i === 0 ? "" : undefined}>
+                  {a.label}
+                  <span class="chev" aria-hidden="true"></span>
+                </span>
+              ))}
+            </span>
+          </button>
+          <ul
+            class="pop menu"
+            id="alphabet-menu"
+            role="listbox"
+            tabindex="-1"
+            aria-label="Alphabet"
+          >
+            {ALPHABETS.map((a, i) => (
+              <li
+                role="option"
+                tabindex="-1"
+                data-v={a.id}
+                aria-selected={i === 0 ? "true" : "false"}
+              >
+                <span class="chars" aria-hidden="true">
+                  {a.chars}
+                </span>
+                <span class="sr-only">{a.label}</span>
+                <svg
+                  class="tick"
+                  width="10"
+                  height="8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  aria-hidden="true"
+                >
+                  <path d="M1 4.2 3.7 7 9 1" />
+                </svg>
+              </li>
+            ))}
+          </ul>
+        </span>
+        <span class="sep" id="sep-feel" aria-hidden="true"></span>
+        <span class="row-label" aria-hidden="true">
+          Feel
+        </span>
+        <fieldset class="seg" id="feel">
+          <legend class="sr-only">Feel</legend>
+          <span class="thumb" aria-hidden="true"></span>
+          {FEELS.map((f, i) => (
+            <label title={f.about}>
+              <input
+                class="sr-only"
+                type="radio"
+                name="feel"
+                value={f.id}
+                checked={i === 0}
+              />
+              {f.label}
+            </label>
+          ))}
+        </fieldset>
+        <span class="drop seg-drop">
+          <button
+            id="feel-chip"
+            type="button"
+            class="chip pick"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="feel-menu"
+          >
+            <span class="sr-only">Feel: </span>
+            <span class="val">
+              {FEELS.map((x, i) => (
+                <span data-v={x.id} data-on={i === 0 ? "" : undefined}>
+                  {x.label}
+                  <span class="chev" aria-hidden="true"></span>
+                </span>
+              ))}
+            </span>
+          </button>
+          <ul
+            class="pop menu"
+            id="feel-menu"
+            role="listbox"
+            aria-label="Feel"
+            tabindex="-1"
+          >
+            {FEELS.map((x, i) => (
+              <li
+                role="option"
+                tabindex="-1"
+                data-v={x.id}
+                aria-selected={i === 0 ? "true" : "false"}
+              >
+                <span class="opt">
+                  <b>{x.label}</b>
+                  <small>{x.about}</small>
+                </span>
+                <svg
+                  class="tick"
+                  width="10"
+                  height="8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  aria-hidden="true"
+                >
+                  <path d="M1 4.2 3.7 7 9 1" />
+                </svg>
+              </li>
+            ))}
+          </ul>
+        </span>
+        <span class="sep" aria-hidden="true"></span>
+        <button
+          id="tune"
+          title="Timing, look-alikes and the pointer, with what each does"
+          type="button"
+          class="chip tune"
+          aria-expanded="false"
+          aria-controls="tuning"
+        >
+          <span class="k">Tune</span>
+          <span id="summary">
+            {DEFAULTS.hold} · {DEFAULTS.stagger} · {value("match")}%
+          </span>
+          <span class="chev" aria-hidden="true"></span>
+        </button>
+        <div class="pop panel" id="tuning" role="group" aria-label="Tuning">
+          {groups.map((g) => (
+            <div class="group">
+              <span class="k">{g.label}</span>
+              {g.fields.map((f) => (
+                <div class="setting">
+                  <label class="slider">
+                    <span>{f.label}</span>
+                    <input
+                      id={f.id}
+                      aria-label={f.label}
+                      type="range"
+                      min={f.min}
+                      max={f.max}
+                      step={f.step}
+                      value={value(f.id)}
+                      aria-describedby={`${f.id}-help`}
+                    />
+                    <output id={`${f.id}-out`} for={f.id}></output>
+                  </label>
+                  <p class="help" id={`${f.id}-help`}>
+                    {f.help}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ))}
+          <div class="panel-foot">
+            <button id="reset" type="button" class="reset" hidden>
+              Reset all
+            </button>
+            <span class="copies">
+              <button id="copy-settings" type="button" class="chip copy">
+                Copy settings
+              </button>
+              <button
+                id="copy-file"
+                type="button"
+                class="chip copy strong"
+                translate="no"
+              >
+                Copy decode.ts
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="sheet" id="sheet">
+      <button class="line" id="stage" type="button" aria-describedby="hint">
+        <span id="line" translate="no">
+          NOTHING MOVES
+        </span>
+      </button>
+      <span class="line probe" id="probe" aria-hidden="true"></span>
+      <div class="cols" id="cols" aria-hidden="true"></div>
+      <div class="index" id="index" aria-hidden="true"></div>
+      <footer class="legend">
+        <p class="legend-key">
+          <span class="k">Key</span>
+          <span id="key">
+            Under each letter: its width in px, and the letters within 12% of it
+            that it can scramble through, or its nearest three.
+          </span>
+        </p>
+        <p class="legend-try">
+          <span class="k">Try</span>
+          <span id="hint">
+            <span class="by-pointer">
+              Click the line for the next one, or run the pointer across it.
+            </span>
+            <span class="by-touch">
+              Tap the line for the next one, or drag across it.
+            </span>
+          </span>
+        </p>
+      </footer>
+    </main>
+
+    <script>
+      import "../main.ts";
+    </script>
+  </body>
+</html>
