@@ -1775,9 +1775,14 @@ input[type="range"] {
 
     // Lit, it stands up off the page as the bar does, in the bar's own
     // paper and shade, with the rules either side of it let go.
+    // It reaches out past the rules into the page's margin, its padding
+    // taking up the difference, so its letters keep their places and
+    // still sit clear of its edge.
     &.hot {
       position: relative;
       z-index: 1;
+      margin-inline: -0.75em;
+      padding-inline: 1.25em;
       background: var(--grain), var(--bg);
       box-shadow: var(--shadow-raised);
       border-radius: 12px;
