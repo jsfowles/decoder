@@ -37,6 +37,9 @@ const LINES = [
 ];
 // Rest between one line landing and the next starting.
 const REST = 2200;
+// How long a tap holds the line, as a pointer resting over it would: a
+// phone has none to rest.
+const TAP_HOLD = 5000;
 // The line's size: as big as fits on one line, between these.
 const MAX = 168;
 const MIN = 32;
@@ -170,8 +173,7 @@ const place = (text: string) => {
   // big, gets the index too, as does a short line set for two.
   const split = sheet.classList.contains("split");
   if (
-    sheet.classList.toggle("indexed", px < SMALL || wraps || split) !==
-    indexed
+    sheet.classList.toggle("indexed", px < SMALL || wraps || split) !== indexed
   ) {
     indexed = !indexed;
     if (!focused && !hot) explain();
@@ -499,6 +501,8 @@ const d = decoder(line, engine(), { onFrame, graze: true });
 const run = (raw: string) => {
   const text = inCase(raw, lettercase);
   clearTimeout(timer);
+  // Held by a tap, a new word starts the hold over.
+  if (held) hold();
   holdLegend(() => place(text));
   decoding(true);
   d.decode(text);
@@ -519,11 +523,24 @@ const carryOn = () => {
   over = false;
   if (!running) later();
 };
-sheet.addEventListener("pointerenter", wait);
+// A mouse holds it by resting over it; a finger is only ever passing.
+sheet.addEventListener("pointerenter", (e) => {
+  if (e.pointerType === "mouse") wait();
+});
+// A tap holds it as resting over it would, for a while, then lets go.
+let held = 0;
+function hold() {
+  clearTimeout(held);
+  wait();
+  held = window.setTimeout(() => {
+    held = 0;
+    carryOn();
+  }, TAP_HOLD);
+}
 // Only keyboard focus holds it: a click or tap on the line focuses it too.
 const keyed = () => !!sheet.querySelector(":focus-visible");
-sheet.addEventListener("pointerleave", () => {
-  if (!keyed()) carryOn();
+sheet.addEventListener("pointerleave", (e) => {
+  if (e.pointerType === "mouse" && !keyed()) carryOn();
 });
 sheet.addEventListener("focusin", () => {
   if (keyed()) wait();
@@ -551,9 +568,33 @@ showPaused();
 // Clicked or tapped, it doesn't keep focus, so a key pressed after never
 // rings it; from the keyboard it does.
 stage.addEventListener("click", (e) => {
+  if (performance.now() - tapped < 600) return;
   if (e.detail > 0) stage.blur();
   cycle();
 });
+
+// A tap is read off the finger itself, held on the line: a graze rebuilds
+// the letters under it, and a phone drops the click of a tap whose letter
+// went from under it. Still enough to be a tap, it plays the next line,
+// and the click after it, if one comes, is let go.
+let tap: { id: number; x: number; y: number } | null = null;
+let tapped = -Infinity;
+stage.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse") return;
+  line.setPointerCapture(e.pointerId);
+  tap = { id: e.pointerId, x: e.clientX, y: e.clientY };
+});
+stage.addEventListener("pointerup", (e) => {
+  if (!tap || e.pointerId !== tap.id) return;
+  const still = Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 10;
+  tap = null;
+  if (!still) return;
+  tapped = performance.now();
+  stage.blur();
+  hold();
+  cycle();
+});
+stage.addEventListener("pointercancel", () => (tap = null));
 
 // Settings: the bar above the sheet, and its tuning panel.
 const inputs = ["hold", "stagger", "match", "heat", "spill"] as const;
@@ -1089,12 +1130,23 @@ const relayout = () => {
   if (!running) later();
 };
 
+// Only a new width can change the line's size. A new height (a phone's
+// toolbar coming or going, an index growing with a longer line) changes
+// just what's under it, so a decode in flight runs on.
 let resized = 0;
+let wide = 0;
 new ResizeObserver(() => {
   // The bar growing or shrinking moves the sheet, not its measure.
   if (growing?.playState === "running") return;
   cancelAnimationFrame(resized);
-  resized = requestAnimationFrame(relayout);
+  resized = requestAnimationFrame(() => {
+    if (sheet.clientWidth !== wide) {
+      wide = sheet.clientWidth;
+      return relayout();
+    }
+    place(d.text);
+    measure();
+  });
 }).observe(sheet);
 
 // The size slider, in the Size chip's panel.

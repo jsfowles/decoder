@@ -10,11 +10,16 @@
   }
 }
 
+// Clear of whatever the browser lays over the page: a notch, or a phone
+// browser's floating toolbar, which would otherwise sit over the legend.
+// Each inset is 0 where nothing covers that edge.
 body {
   display: grid;
   grid-template-rows: auto auto 1fr;
   grid-template-columns: minmax(0, 1fr);
-  padding: 0 var(--edge);
+  padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
+  padding-inline: max(var(--edge), env(safe-area-inset-left, 0px))
+    max(var(--edge), env(safe-area-inset-right, 0px));
 }
 
 .top {
@@ -1311,6 +1316,11 @@ input[type="range"] {
   padding-right: 0.06em;
   // A sideways drag scrambles the letters; only an upward one scrolls.
   touch-action: pan-y;
+  // Pressed or dragged on a phone, it scrambles; it never selects, nor
+  // brings up the copy menu.
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 
   .wrapped & {
     white-space: normal;
@@ -1590,6 +1600,10 @@ input[type="range"] {
 // Under a small line: the index instead of the columns.
 .index {
   display: none;
+  // Touched to light a letter, as the columns are, not to select it.
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .indexed {
@@ -1724,17 +1738,26 @@ input[type="range"] {
 
 // Under a line on two rows the index is a table: one row a letter, its
 // width and count, then its look-alikes on the same line, so ten letters
-// fit in a glance. Its rows and margins close up on a short screen, so ten
-// still fit above the legend on a phone with its toolbars showing.
+// fit in a glance. It takes the room down to the legend, its rows sharing
+// what's spare up to a comfortable height, and its type as large as the
+// longest row of look-alikes leaves room for. Its margins close up on a
+// short screen, so ten still fit above the legend.
 .split {
+  container-type: inline-size;
+
   &.indexed .index {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    font-size: clamp(13px, 100cqi / 26.5, 18px);
     margin: clamp(8px, 3svh - 12px, 20px) 0 clamp(12px, 3svh - 8px, 24px);
   }
 
   .entry {
+    flex: 1 0 auto;
+    max-height: 3.4em;
     grid-template-columns: 2.6em 5.4em minmax(0, 1fr);
+    align-content: center;
     align-items: baseline;
     column-gap: 0.5em;
     padding: clamp(0.15em, 1.2svh - 5px, 0.4em) 0.5em;
@@ -1751,7 +1774,12 @@ input[type="range"] {
 
     .ch {
       grid-row: auto;
-      font-size: 1.3em;
+      font-size: 1.6em;
+    }
+
+    // One line, whatever the width: three figures still fit its column.
+    .about {
+      white-space: nowrap;
     }
 
     // Beside the letter, on its line.
@@ -1904,8 +1932,9 @@ input[type="range"] {
     width: 100%;
   }
 
-  // On a phone the page scrolls: the specimen sits under the bar, the
-  // legend at the foot of the screen, or after it when it runs longer.
+  // On a phone the specimen sits under the bar and its index runs to the
+  // foot of the screen. The legend is left off: the index says what it
+  // is, and the line answers a tap without being told.
   .sheet {
     padding-top: clamp(16px, 6svh - 16px, 40px);
 
@@ -1914,7 +1943,7 @@ input[type="range"] {
     }
 
     > .legend {
-      margin-bottom: clamp(16px, 4svh - 8px, 28px);
+      display: none;
     }
   }
 

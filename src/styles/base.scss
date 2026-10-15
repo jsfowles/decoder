@@ -10,7 +10,9 @@ body {
 }
 
 body {
-  min-height: 100svh;
+  // The screen with its toolbars showing. Safari has that as svh; Arc's
+  // svh runs on under its floating toolbar, and only dvh stops above it.
+  min-height: min(100svh, 100dvh);
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
