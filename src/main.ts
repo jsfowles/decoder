@@ -501,8 +501,10 @@ const d = decoder(line, engine(), { onFrame, graze: true });
 const run = (raw: string) => {
   const text = inCase(raw, lettercase);
   clearTimeout(timer);
-  // Held by a tap, a new word starts the hold over.
+  // Held by a tap, a new word starts the hold over, and lets go of an
+  // entry tapped in the last one's index.
   if (held) hold();
+  if (rowHeld) letGo();
   holdLegend(() => place(text));
   decoding(true);
   d.decode(text);
@@ -973,7 +975,26 @@ const heat = (entry: HTMLElement | null) => {
 index.addEventListener("pointerover", (e) =>
   heat((e.target as Element).closest<HTMLElement>(".entry")),
 );
-index.addEventListener("pointerleave", () => heat(null));
+index.addEventListener("pointerleave", (e) => {
+  if (e.pointerType === "mouse") heat(null);
+});
+// A finger lifts off at once, so a tapped entry stays lit, and the line
+// held under it, as long as a tap holds the line.
+let rowHeld = 0;
+const letGo = () => {
+  clearTimeout(rowHeld);
+  rowHeld = 0;
+  heat(null);
+};
+index.addEventListener("pointerup", (e) => {
+  if (e.pointerType === "mouse") return;
+  const entry = (e.target as Element).closest<HTMLElement>(".entry");
+  if (!entry) return;
+  heat(entry);
+  hold();
+  clearTimeout(rowHeld);
+  rowHeld = window.setTimeout(letGo, TAP_HOLD);
+});
 
 const apply = (next: Settings) => {
   settings = next;
