@@ -367,6 +367,9 @@ const easeHeight = (el: HTMLElement, change: () => void) => {
 // was. Added on, so a second change mid-slide carries on from there.
 const legend = sheet.querySelector<HTMLElement>(".legend")!;
 const holdLegend = (change: () => void) => {
+  // Before the sheet shows, there's nowhere it was: sliding in from the
+  // unfitted layout would only push it past the screen's foot.
+  if (!sheet.classList.contains("ready")) return change();
   const from = legend.getBoundingClientRect().top;
   change();
   const by = from - legend.getBoundingClientRect().top;
@@ -581,10 +584,15 @@ const opens = (chip: HTMLElement) =>
   chip.id === "settings" ? dock : (chip.nextElementSibling as HTMLElement);
 const within = (chip: HTMLElement, node: Node) =>
   chip.contains(node) || opens(chip).contains(node);
+// Whether `chip` is one of what `c` opened. Settings opens the whole bar,
+// but the chips on the bar's own row aren't in it: opening one of those
+// folds Settings away.
+const holds = (c: HTMLElement, chip: HTMLElement) =>
+  c.id === "settings" ? !!chip.closest(ROWS) : opens(c).contains(chip);
 const close = (chip: HTMLButtonElement) => {
   if (chip.id === "settings" && isOpen(chip) && smooth()) return fold(chip);
   chip.setAttribute("aria-expanded", "false");
-  for (const c of chips) if (c !== chip && opens(chip).contains(c)) close(c);
+  for (const c of chips) if (c !== chip && holds(chip, c)) close(c);
 };
 
 // On a phone, Settings opens the bar downward as part of the page, so the
@@ -646,11 +654,11 @@ const fold = (chip: HTMLButtonElement) => {
     dock.classList.remove("folding");
     dock.style.overflow = "";
     chip.setAttribute("aria-expanded", "false");
-    for (const c of chips) if (c !== chip && opens(chip).contains(c)) close(c);
+    for (const c of chips) if (c !== chip && holds(chip, c)) close(c);
   };
 };
 const toggle = (chip: HTMLButtonElement, open = !isOpen(chip)) => {
-  for (const c of chips) if (c !== chip && !opens(c).contains(chip)) close(c);
+  for (const c of chips) if (c !== chip && !holds(c, chip)) close(c);
   if (open) chip.setAttribute("aria-expanded", "true");
   else close(chip);
 };

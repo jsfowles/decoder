@@ -937,6 +937,9 @@ body {
 // all one raised surface opening from under their chip.
 .pop {
   position: absolute;
+  // Over whatever in the bar it opens across, the line's field included,
+  // as on a phone, where a menu hangs over the open settings.
+  z-index: 5;
   top: calc(100% + 14px);
   border-radius: 16px;
   white-space: normal;
@@ -1721,19 +1724,20 @@ input[type="range"] {
 
 // Under a line on two rows the index is a table: one row a letter, its
 // width and count, then its look-alikes on the same line, so ten letters
-// fit in a glance.
+// fit in a glance. Its rows and margins close up on a short screen, so ten
+// still fit above the legend on a phone with its toolbars showing.
 .split {
   &.indexed .index {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
-    margin: 20px 0 24px;
+    margin: clamp(8px, 3svh - 12px, 20px) 0 clamp(12px, 3svh - 8px, 24px);
   }
 
   .entry {
     grid-template-columns: 2.6em 5.4em minmax(0, 1fr);
     align-items: baseline;
     column-gap: 0.5em;
-    padding: 0.4em 0.5em;
+    padding: clamp(0.15em, 1.2svh - 5px, 0.4em) 0.5em;
     border-bottom: 1px solid rgb(0 0 0 / 0.05);
     border-radius: 0;
 
@@ -1884,9 +1888,11 @@ input[type="range"] {
   }
 }
 
+// On a phone the spacing closes up on a short screen, so the page fits it
+// without a scroll whenever what's on it can.
 @include phone {
   .top {
-    padding-top: 24px;
+    padding-top: clamp(12px, 4svh - 10px, 24px);
   }
 
   .links {
@@ -1901,10 +1907,14 @@ input[type="range"] {
   // On a phone the page scrolls: the specimen sits under the bar, the
   // legend at the foot of the screen, or after it when it runs longer.
   .sheet {
-    padding-top: 40px;
+    padding-top: clamp(16px, 6svh - 16px, 40px);
 
     > #stage {
       margin-top: 0;
+    }
+
+    > .legend {
+      margin-bottom: clamp(16px, 4svh - 8px, 28px);
     }
   }
 
@@ -1912,6 +1922,6 @@ input[type="range"] {
   .dock {
     position: relative;
     top: auto;
-    margin-top: 24px;
+    margin-top: clamp(12px, 4svh - 10px, 24px);
   }
 }
