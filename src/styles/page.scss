@@ -1749,6 +1749,7 @@ input[type="range"] {
     flex: 1 0 auto;
     display: flex;
     flex-direction: column;
+    gap: 0;
     font-size: clamp(13px, 100cqi / 26.5, 18px);
     margin: clamp(8px, 3svh - 12px, 20px) 0 clamp(12px, 3svh - 8px, 24px);
   }
@@ -1763,13 +1764,28 @@ input[type="range"] {
     padding: clamp(0.15em, 1.2svh - 5px, 0.4em) 0.5em;
     border-bottom: 1px solid rgb(0 0 0 / 0.05);
     border-radius: 0;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
 
     &:last-child {
       border-bottom: 0;
     }
 
+    // Lit, it stands up off the page as the bar does, in the bar's own
+    // paper and shade, with the rules either side of it let go.
     &.hot {
-      border-radius: 8px;
+      position: relative;
+      z-index: 1;
+      background: var(--grain), var(--bg);
+      box-shadow: var(--shadow-raised);
+      border-radius: 12px;
+      border-bottom-color: transparent;
+    }
+
+    &:has(+ .hot) {
+      border-bottom-color: transparent;
     }
 
     .ch {
