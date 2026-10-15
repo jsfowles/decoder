@@ -1798,13 +1798,8 @@ input[type="range"] {
 }
 
 // It changes to describe the column under the pointer; it keeps its row.
-// A wrapped line with no index has nothing under it to describe.
 .legend-key {
   min-height: 1.4em;
-
-  .wrapped:not(.indexed) & {
-    display: none;
-  }
 }
 
 // What to try, said for the hand you have.

@@ -150,14 +150,14 @@ const place = (text: string) => {
   const px = chosen ?? fitted;
   document.documentElement.style.setProperty("--line", `${px}px`);
   document.documentElement.style.setProperty("--rows", String(rows()));
-  if (sheet.classList.toggle("indexed", px < SMALL) !== indexed) {
+  const wraps = (wideAt(text) * px) / MAX > sheet.clientWidth * 0.98;
+  sheet.classList.toggle("wrapped", wraps);
+  // Columns can't sit under a line on two rows, so a wrapped line, however
+  // big, gets the index too.
+  if (sheet.classList.toggle("indexed", px < SMALL || wraps) !== indexed) {
     indexed = !indexed;
     if (!focused && !hot) explain();
   }
-  sheet.classList.toggle(
-    "wrapped",
-    (wideAt(text) * px) / MAX > sheet.clientWidth * 0.98,
-  );
   const size = $<HTMLInputElement>("size");
   // The slider runs from small up to the fit, so the line never wraps.
   size.max = String(fitted);
