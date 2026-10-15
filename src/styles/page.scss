@@ -1791,10 +1791,6 @@ input[type="range"] {
     flex: none;
     font-size: 10px;
   }
-
-  .wrapped & {
-    margin-top: 24px;
-  }
 }
 
 // It changes to describe the column under the pointer; it keeps its row.
@@ -1903,16 +1899,12 @@ input[type="range"] {
   }
 
   // On a phone the page scrolls: the specimen sits under the bar, the
-  // legend straight after it.
+  // legend at the foot of the screen, or after it when it runs longer.
   .sheet {
     padding-top: 40px;
 
     > #stage {
       margin-top: 0;
-    }
-
-    > .legend {
-      margin-top: 24px;
     }
   }
 
