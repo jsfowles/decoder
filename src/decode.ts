@@ -194,6 +194,7 @@ export const decoder = (
     const breaks = new Set<number>();
     if (node instanceof Text) {
       const range = document.createRange();
+      const rects: DOMRect[] = [];
       let top: number | null = null;
       let off = 0;
       chars.forEach((ch, i) => {
@@ -201,10 +202,32 @@ export const decoder = (
         range.setEnd(node, off + ch.length);
         off += ch.length;
         const r = range.getBoundingClientRect();
-        widths.push(r.width);
+        rects.push(r);
         if (!ch.trim() || ch === ZWSP) return;
         if (top !== null && r.top > top + r.height / 2) breaks.add(i);
         if (top === null || r.top > top + r.height / 2) top = r.top;
+      });
+      // A letter's box is how far the next one starts from it: WebKit
+      // leaves negative tracking out of a letter's own rect, so pinned to
+      // that, the line would run wider than the text it settles into. The
+      // last on a line has no next, so it gets its rect less the gap the
+      // rest of its line showed between rect and advance.
+      const sameLine = (a: DOMRect, b: DOMRect) =>
+        Math.abs(a.top - b.top) < a.height / 2;
+      let lineStart = 0;
+      rects.forEach((r, i) => {
+        const next = rects[i + 1];
+        if (next && sameLine(r, next)) {
+          widths.push(next.left - r.left);
+          return;
+        }
+        const gaps = rects
+          .slice(lineStart, i)
+          .map((p, j) => p.width - widths[lineStart + j])
+          .sort((a, b) => a - b);
+        const gap = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 0;
+        widths.push(r.width - gap);
+        lineStart = i + 1;
       });
     }
     plan = { widths, breaks };
@@ -416,8 +439,18 @@ export const decoder = (
     }
     if (!node || node.parentNode !== face || !(node instanceof Text))
       return null;
-    const i = [...node.data.slice(0, offset)].length;
-    return chars.length ? Math.min(chars.length - 1, i) : null;
+    if (!chars.length) return null;
+    // A caret lands on the nearer edge of a letter: past its middle, that's
+    // after it. The letter under the point is the one its box holds.
+    let at = offset;
+    if (at > 0) {
+      const range = document.createRange();
+      range.setStart(node, at - 1);
+      range.setEnd(node, at);
+      if (e.clientX <= range.getBoundingClientRect().right) at -= 1;
+    }
+    const i = [...node.data.slice(0, at)].length;
+    return Math.min(chars.length - 1, i);
   };
 
   // Heats letter `i` to `hot` and its neighbours to `spill`, starting a
