@@ -1608,12 +1608,11 @@ input[type="range"] {
   }
 }
 
-// A phone sets the line on two rows, and keeps the room for two even
-// when a line fits on one, so the index under it never jumps.
-@media (max-width: 759px) {
-  .sheet.wrapped > #stage {
-    min-height: 1.8em;
-  }
+// Too narrow for one row at a size for columns, the line is set on two,
+// with room kept for two even when a line fits on one, so the index under
+// it never jumps.
+.sheet.split > #stage {
+  min-height: 1.8em;
 }
 
 // Stacked under a small line, the index runs longer or shorter with the
@@ -1720,10 +1719,11 @@ input[type="range"] {
   }
 }
 
-// On a phone the index is a table: one row a letter, its width and count,
-// then its look-alikes on the same line, so ten letters fit in a glance.
-@media (max-width: 759px) {
-  .indexed .index {
+// Under a line on two rows the index is a table: one row a letter, its
+// width and count, then its look-alikes on the same line, so ten letters
+// fit in a glance.
+.split {
+  &.indexed .index {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     margin: 20px 0 24px;

@@ -117,9 +117,11 @@ const wideAt = (t: string) => {
   return probe.getBoundingClientRect().width;
 };
 
-// On a phone the line takes two rows, so it can be set twice the size:
-// what has to fit is each line's longer half, split where it's most even.
+// The bar's phone layout, as page.scss sets it.
 const phone = matchMedia("(max-width: 759px)");
+
+// What has to fit on two rows: each line's longer half, split where it's
+// most even.
 const halves = (t: string) => {
   const words = t.split(" ");
   let best = wideAt(t);
@@ -134,12 +136,24 @@ const halves = (t: string) => {
   return best;
 };
 
-const fit = () => {
-  const measure = phone.matches ? halves : wideAt;
+// The size every line fits at when each is measured by `measure`.
+const fitBy = (measure: (t: string) => number) => {
   const wide = Math.max(
     ...[...LINES, own ?? ""].map((t) => measure(inCase(t, lettercase))),
   );
-  const size = wide ? Math.floor((MAX * sheet.clientWidth * 0.98) / wide) : MAX;
+  return wide ? Math.floor((MAX * sheet.clientWidth * 0.98) / wide) : MAX;
+};
+
+// One row while it stays big enough for columns; under that, two rows at
+// near twice the size, with the index the small line would get anyway. So
+// the line jumps once, where the layout changes too. A wide window puts
+// the index beside the line instead, in half the width: one row there.
+const stacked = matchMedia("(max-width: 999px)");
+const fit = () => {
+  const one = fitBy(wideAt);
+  const split = one < SMALL && stacked.matches;
+  sheet.classList.toggle("split", split);
+  const size = split ? fitBy(halves) : one;
   fitted = Math.max(MIN, Math.min(MAX, size));
   // A size you picked never outgrows the window: at the fit, it's the fit.
   if (chosen !== null && chosen >= fitted) chosen = null;
@@ -153,8 +167,12 @@ const place = (text: string) => {
   const wraps = (wideAt(text) * px) / MAX > sheet.clientWidth * 0.98;
   sheet.classList.toggle("wrapped", wraps);
   // Columns can't sit under a line on two rows, so a wrapped line, however
-  // big, gets the index too.
-  if (sheet.classList.toggle("indexed", px < SMALL || wraps) !== indexed) {
+  // big, gets the index too, as does a short line set for two.
+  const split = sheet.classList.contains("split");
+  if (
+    sheet.classList.toggle("indexed", px < SMALL || wraps || split) !==
+    indexed
+  ) {
     indexed = !indexed;
     if (!focused && !hot) explain();
   }
