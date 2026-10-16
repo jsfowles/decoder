@@ -139,12 +139,16 @@ const halves = (t: string) => {
   return best;
 };
 
+// The line's measure: the sheet's, but no wider than the bar, so it keeps
+// to the bar's ends as the header and legend do.
+const room = () => Math.min(sheet.clientWidth, $("dock").offsetWidth);
+
 // The size every line fits at when each is measured by `measure`.
 const fitBy = (measure: (t: string) => number) => {
   const wide = Math.max(
     ...[...LINES, own ?? ""].map((t) => measure(inCase(t, lettercase))),
   );
-  return wide ? Math.floor((MAX * sheet.clientWidth * 0.98) / wide) : MAX;
+  return wide ? Math.floor((MAX * room() * 0.98) / wide) : MAX;
 };
 
 // One row while it stays big enough for columns; under that, two rows at
@@ -167,7 +171,7 @@ const place = (text: string) => {
   const px = chosen ?? fitted;
   document.documentElement.style.setProperty("--line", `${px}px`);
   document.documentElement.style.setProperty("--rows", String(rows()));
-  const wraps = (wideAt(text) * px) / MAX > sheet.clientWidth * 0.98;
+  const wraps = (wideAt(text) * px) / MAX > room() * 0.98;
   sheet.classList.toggle("wrapped", wraps);
   // Columns can't sit under a line on two rows, so a wrapped line, however
   // big, gets the index too, as does a short line set for two.
@@ -1159,24 +1163,27 @@ const relayout = () => {
   if (!running) later();
 };
 
-// Only a new width can change the line's size. A new height (a phone's
-// toolbar coming or going, an index growing with a longer line) changes
-// just what's under it, so a decode in flight runs on.
+// Only a new width can change the line's size: the sheet's, or the bar's
+// it keeps to. A new height (a phone's toolbar coming or going, an index
+// growing with a longer line) changes just what's under it, so a decode
+// in flight runs on.
 let resized = 0;
 let wide = 0;
-new ResizeObserver(() => {
+const resizing = new ResizeObserver(() => {
   // The bar growing or shrinking moves the sheet, not its measure.
   if (growing?.playState === "running") return;
   cancelAnimationFrame(resized);
   resized = requestAnimationFrame(() => {
-    if (sheet.clientWidth !== wide) {
-      wide = sheet.clientWidth;
+    if (room() !== wide) {
+      wide = room();
       return relayout();
     }
     place(d.text);
     measure();
   });
-}).observe(sheet);
+});
+resizing.observe(sheet);
+resizing.observe(dock);
 
 // The size slider, in the Size chip's panel.
 const sizeChip = $<HTMLButtonElement>("size-chip");
