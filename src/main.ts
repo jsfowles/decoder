@@ -184,7 +184,9 @@ const place = (text: string) => {
   size.value = String(px);
   const [lo, hi] = [Number(size.min), Number(size.max)];
   size.style.setProperty("--p", `${((px - lo) / (hi - lo)) * 100}%`);
-  $("size-val").textContent = String(px);
+  // Fitted, the chip says so; a size you picked, it gives in px.
+  $("size-val").textContent = chosen === null ? "Fit width" : String(px);
+  $("size-chip").querySelector<HTMLElement>(".unit")!.hidden = chosen === null;
   $("size-out").textContent = `${px}\u00A0px`;
   size.setAttribute("aria-valuetext", `${px} px`);
   $("fit").hidden = chosen === null;
@@ -1048,6 +1050,12 @@ const reach = () => {
   );
 };
 new ResizeObserver(reach).observe(dock);
+// The bar's width, for the legend to keep to as the header does: the
+// legend sits in the sheet, which runs the full width.
+const keepTo = () =>
+  document.documentElement.style.setProperty("--bar", `${dock.offsetWidth}px`);
+keepTo();
+new ResizeObserver(keepTo).observe(dock);
 
 // On a tablet the case and the feel are lists, not switches: picking
 // from one picks the switch's choice, and the switch keeps the list right.
@@ -1187,9 +1195,31 @@ $("fit").addEventListener("click", () => {
   size.focus();
 });
 
+// The name, which goes back to the start, and the links decode too: as
+// the page comes in, and again whenever you point at one. Slower than the line, so a word that short
+// is seen landing. Each draws on the alphabet in its own case.
+const words = (
+  [
+    [".name a", "lower"],
+    [".links a", "title"],
+  ] as const
+).flatMap(([at, c]) =>
+  [...document.querySelectorAll<HTMLElement>(at)].map((el) => {
+    const word = decoder(el, {
+      ...DEFAULTS,
+      hold: 10,
+      stagger: 3,
+      alphabet: alphabetIn(DEFAULTS.alphabet, c),
+    });
+    el.addEventListener("pointerenter", () => word.decode());
+    return word;
+  }),
+);
+
 document.fonts.load(`800 ${MAX}px "Geist Variable"`).finally(() => {
   show();
   fit();
   run(LINES[0]);
+  for (const word of words) word.decode();
   sheet.classList.add("ready");
 });

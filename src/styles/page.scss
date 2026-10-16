@@ -13,13 +13,29 @@
 // Clear of whatever the browser lays over the page: a notch, or a phone
 // browser's floating toolbar, which would otherwise sit over the legend.
 // Each inset is 0 where nothing covers that edge.
+// The header and the bar share a middle column as wide as the bar, so the
+// name and links line up with its ends; the sheet runs the full width.
 body {
   display: grid;
   grid-template-rows: auto auto 1fr;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, max-content) minmax(0, 1fr);
   padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
   padding-inline: max(var(--edge), env(safe-area-inset-left, 0px))
     max(var(--edge), env(safe-area-inset-right, 0px));
+}
+
+.top,
+.dock {
+  grid-column: 2;
+
+  // Where the bar fills the width instead, the header goes with it.
+  @media (max-width: 1179px) {
+    grid-column: 1 / -1;
+  }
+}
+
+.sheet {
+  grid-column: 1 / -1;
 }
 
 .top {
@@ -1821,14 +1837,16 @@ input[type="range"] {
 }
 
 // The specimen's legend, ruled off under it: what the columns show on the
-// left, what you can do on the right.
+// left, what you can do on the right. Too narrow for both on one row, what
+// you can do drops under the key, at its left.
 .legend {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
   gap: 10px 48px;
-  margin: 4px 0 28px;
+  width: min(100%, var(--bar, 100%));
+  margin: 4px auto 28px;
   padding-top: 14px;
   border-top: 1px solid var(--border);
   font-size: var(--text-meta);
@@ -1925,15 +1943,6 @@ input[type="range"] {
     .tri {
       scale: 1;
     }
-  }
-}
-
-.legend-try {
-  margin-left: auto;
-
-  // Too narrow for both on one row, it lines up under the key.
-  @media (max-width: 1099px) {
-    margin-left: 0;
   }
 }
 
