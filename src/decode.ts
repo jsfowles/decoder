@@ -63,17 +63,14 @@ const DUE = FRAME * 0.75;
 // A break that takes no room, so a long word can still wrap there.
 const ZWSP = "​";
 
-// The fewest look-alikes a letter gets. A letter with nothing near its width,
-// like a narrow I, is topped up with the nearest widths there are rather
-// than left still while the rest scramble. Pinned to its own width, a
-// stand-in a little wider can't move anything beside it.
+// Minimum pool size. A letter with nothing near its width (a narrow I)
+// gets the nearest widths instead of sitting still.
 const LEAST = 3;
 
 // How a letter is drawn: its opacity, and its blur in em.
 type Look = { o: number; b: number };
 const INK: Look = { o: 1, b: 0 };
-// Frames a letter takes to come up to full ink once it lands: a beat
-// longer in focus, to pull sharp.
+// Frames to reach full ink after landing, per feel.
 const FADE = { sharp: 0, soft: 16, focus: 17 };
 
 /**
@@ -107,8 +104,8 @@ export const poolsFor = (
   });
 };
 
-// Each character's width, set in `host` exactly as the page sets it: its
-// variable axes, features and tracking included, which a canvas can't see.
+// Measures each character in `host` itself, so variable axes, font features
+// and tracking count. A canvas can't see those.
 const widthsIn = (host: HTMLElement, chars: string[]) => {
   const probe = document.createElement("span");
   probe.setAttribute("aria-hidden", "true");
@@ -154,8 +151,7 @@ export const decoder = (
     "position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap";
   const face = document.createElement("span");
   face.setAttribute("aria-hidden", "true");
-  // CSS uppercase would show capitals but measure lowercase, so the text
-  // itself is cased to match.
+  // CSS uppercase measures as lowercase, so case the text itself.
   const upper = getComputedStyle(el).textTransform === "uppercase";
   const cased = (t: string) => (upper ? t.toUpperCase() : t);
 
@@ -167,8 +163,8 @@ export const decoder = (
   let fresh = false;
   // Each letter's width and where lines break, read off the plain text.
   let plan: { widths: number[]; breaks: Set<number> } | null = null;
-  // While it runs, every letter sits in a box pinned to its own width, so
-  // a look-alike a hair wider or narrower can't move anything beside it.
+  // Mid-run, each letter sits in a box pinned to its width, so a slightly
+  // wider look-alike can't shift its neighbours.
   let boxes: (HTMLElement | null)[] | null = null;
   let raf = 0;
   let t = 0;
@@ -207,11 +203,10 @@ export const decoder = (
         if (top !== null && r.top > top + r.height / 2) breaks.add(i);
         if (top === null || r.top > top + r.height / 2) top = r.top;
       });
-      // A letter's box is how far the next one starts from it: WebKit
-      // leaves negative tracking out of a letter's own rect, so pinned to
-      // that, the line would run wider than the text it settles into. The
-      // last on a line has no next, so it gets its rect less the gap the
-      // rest of its line showed between rect and advance.
+      // Box width = distance to the next letter's left edge. WebKit leaves
+      // negative tracking out of a letter's rect, so rect widths would make
+      // the line too wide. The last letter on a line uses its rect minus the
+      // line's median rect-to-advance gap.
       const sameLine = (a: DOMRect, b: DOMRect) =>
         Math.abs(a.top - b.top) < a.height / 2;
       let lineStart = 0;
@@ -251,8 +246,7 @@ export const decoder = (
           parts[parts.length - 1] = newline;
         else parts.push(newline);
       }
-      // Spaces are pinned too: one kerned against the letter beside it
-      // would widen on its own between two boxes and push the line apart.
+      // Pin spaces too. A kerned space widens between two boxes otherwise.
       if (!ch.trim() || ch === ZWSP) {
         const gap = pinned(widths[i]);
         gap.dataset.gap = "";
@@ -288,8 +282,7 @@ export const decoder = (
         if (box.textContent !== shown[i]) box.textContent = shown[i];
         const look = looks?.[i];
         if (!look) return;
-        // Kept on its own layer while it fades and blurs; a letter in full
-        // ink doesn't need one.
+        // Promote to a layer only once it fades or blurs.
         if (look !== INK && !box.style.willChange)
           box.style.willChange = "opacity, filter";
         const o = String(Math.round(look.o * 100) / 100);
@@ -324,20 +317,16 @@ export const decoder = (
     s.feel === "sharp"
       ? INK
       : s.feel === "soft"
-        ? // Faint while it scrambles, its ink climbing as it nears landing,
-          // so with the fade after it lands the whole rise is one S.
+        ? // Ink rises as it nears landing; with the post-land fade it's one S-curve.
           { o: 0.28 + 0.37 * p * p, b: 0 }
-        : // Focus eases out of its blur, and lands still a little soft so
-          // the swap to the real letter is hidden, then pulls sharp.
+        : // Lands slightly blurred to hide the swap, then sharpens.
           { o: 0.35 + 0.3 * p, b: 0.02 + 0.045 * (1 - p) ** 2 };
-  // Frames between swaps: every one when sharp; when soft, easing from
-  // every frame to every third as it lands, settling without stepping; a
-  // steady shimmer in focus, which the blur smooths.
+  // Frames between swaps: 0 for sharp, 1 to 3 for soft as it lands, 2 for focus.
   const gapOf = (p: number) =>
     s.feel === "sharp" ? 0 : s.feel === "soft" ? 1 + 2 * p * p : 2;
 
-  // Per letter, for the run: what it shows and when it next swaps; whether
-  // it was scrambling; once it lands, when, and how it looked then.
+  // Per-letter run state: shown glyph, next swap frame, was-live, landed
+  // frame, and look at landing.
   let shown: string[] = [];
   let next: number[] = [];
   let was: boolean[] = [];
@@ -440,8 +429,8 @@ export const decoder = (
     if (!node || node.parentNode !== face || !(node instanceof Text))
       return null;
     if (!chars.length) return null;
-    // A caret lands on the nearer edge of a letter: past its middle, that's
-    // after it. The letter under the point is the one its box holds.
+    // The caret snaps to the nearer edge, so past a letter's middle it lands
+    // after it. Step back when the pointer is still over that letter.
     let at = offset;
     if (at > 0) {
       const range = document.createRange();

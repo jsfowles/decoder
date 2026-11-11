@@ -10,11 +10,8 @@
   }
 }
 
-// Clear of whatever the browser lays over the page: a notch, or a phone
-// browser's floating toolbar, which would otherwise sit over the legend.
-// Each inset is 0 where nothing covers that edge.
-// The header and the bar share a middle column as wide as the bar, so the
-// name and links line up with its ends; the sheet runs the full width.
+// Safe-area insets keep the legend clear of a notch or floating toolbar.
+// Header shares the bar's width so its name and links line up with the bar.
 body {
   display: grid;
   grid-template-rows: auto auto 1fr;
@@ -28,7 +25,6 @@ body {
 .dock {
   grid-column: 2;
 
-  // Where the bar fills the width instead, the header goes with it.
   @media (max-width: 1179px) {
     grid-column: 1 / -1;
   }
@@ -74,8 +70,7 @@ body {
   }
 }
 
-// One bar above the sheet: your own line, then what it is set in and how
-// it feels. The numbers open as a panel under it.
+// Bar: sticky, above the sheet
 .dock {
   position: sticky;
   top: 16px;
@@ -93,14 +88,8 @@ body {
   font-size: var(--text-body-sm);
 }
 
-// The bar and its panel are the sheet pressed up out of itself: its own
-// grey, lit from the top left. The bar frosts where it can, so the line
-// reads through it as it scrolls under, and frosts on a layer behind it,
-// not on itself, so the panel inside isn't frosted against only the bar.
-// The panel is solid: it opens over the line, and the line blurred through
-// it muddies the light and shade. The bar's shade is cast by the bar
-// itself, not the layer, so clipping what's inside it as it grows on a
-// phone never takes the shade with it.
+// Frost sits on ::before so the panel inside isn't blurred against only the bar.
+// The panel stays solid, and .dock casts the shadow so the phone clip can't cut it.
 .dock {
   box-shadow: var(--shadow-raised);
 }
@@ -130,9 +119,7 @@ body {
   border-radius: inherit;
 }
 
-// Your own line, first on the bar. Typing in it, it opens out over the
-// type settings as far as the feel, revealed by a clip so nothing beside
-// it moves; the bar sets how far that is, as --reach.
+// Line field: opens over the type settings via clip-path; JS sets --reach.
 .write {
   position: relative;
   flex: 0 0 220px;
@@ -161,9 +148,7 @@ body {
     }
   }
 
-  // White while you type in it, over what it opens across. It stays white
-  // until the field has drawn back in, so you see it close; opening, it's
-  // white at once.
+  // White while focused; holds until the field closes.
   &::before {
     content: "";
     position: absolute;
@@ -199,7 +184,7 @@ body {
       color: var(--text-muted);
     }
 
-    // At 16px a phone keeps its zoom when you tap into it.
+    // 16px stops iOS zooming on focus.
     @media (hover: none) {
       font-size: 16px;
     }
@@ -214,21 +199,19 @@ body {
   }
 }
 
-// Wide enough to open: it reaches over the type settings, which step back
-// as it comes.
+// Bar: desktop (>=1180px). The field opens over the type settings.
 @media (min-width: 1180px) {
   .write:focus-within .field {
     clip-path: inset(0 0 0 0 round 9px);
   }
 
-  // Out quickly ahead of the edge; back in as it draws away.
   .dock:has(.write:focus-within) :is(.drop, .case, .lead) {
     opacity: 0;
     transition-duration: var(--duration-fast);
   }
 }
 
-// Return decodes it; the key shows once there's something to decode.
+// Return key hint, hidden when the field is empty.
 .go {
   display: grid;
   place-items: center;
@@ -256,7 +239,6 @@ body {
     line-height: 1;
   }
 
-  // Gone once it has faded, not before.
   .field:has(input:placeholder-shown) & {
     opacity: 0;
     visibility: hidden;
@@ -264,8 +246,7 @@ body {
   }
 }
 
-// On a wide screen the controls sit straight on the bar; the Settings
-// chip and the row labels are for the narrow one.
+// Bar: controls inline; Settings chip and row labels are phone-only.
 .controls {
   display: contents;
 }
@@ -275,10 +256,8 @@ body {
   display: none;
 }
 
-// A tablet: every control stays out, on one row as on a desktop. The
-// case and the feel turn from switches into lists to make the room, the
-// typeface chip drops its sample, and your line is a pen at the end that
-// opens its field across the bar.
+// Bar: tablet (760-1179px). Case and feel become lists, the face chip drops its sample,
+// and the line collapses to a pen that opens the field over the bar.
 .dock .pen,
 .dock .seg-drop {
   display: none;
@@ -301,8 +280,6 @@ body {
       display: inline-block;
     }
 
-    // Toward the bar's right end, these lists hang back from their chip's
-    // right edge.
     .seg-drop:has(#feel-chip),
     .drop:has(#alphabet) {
       .menu {
@@ -312,7 +289,6 @@ body {
       }
     }
 
-    // The pen at the end; the field it opens, over the whole bar.
     .write {
       order: 1;
       flex: none;
@@ -360,10 +336,8 @@ body {
   }
 }
 
-// A phone: the bar holds the typeface, the feel and Settings. Settings
-// opens the bar downward, as part of the page: your line, then size, case
-// and alphabet, then Tune's numbers and the copies, every row on one grid
-// of a label and its control. Short enough to see whole.
+// Bar: phone (<760px). Mirrors the `phone` matchMedia in main.ts.
+// Settings opens the bar downward as a label/control grid.
 @media (max-width: 759px) {
   .dock {
     display: grid;
@@ -382,8 +356,6 @@ body {
       display: none;
     }
 
-    // Under the bar a rule, Settings below it: the line between what's
-    // always there and what you opened.
     .lead {
       order: -1;
       grid-column: 1 / -1;
@@ -393,8 +365,7 @@ body {
       background: rgb(0 0 0 / 0.07);
     }
 
-    // The bar: typeface, feel, Settings. The typeface gives way first: a
-    // long name trails off before its caret is crowded out.
+    // Face name truncates before the caret is crowded out.
     .drop:has(#face) {
       grid-area: 1 / 1 / 2 / 3;
       justify-self: start;
@@ -412,7 +383,7 @@ body {
         flex: none;
       }
 
-      // Only the chosen name, so the caret follows it, not the longest.
+      // Show only the chosen name so the caret hugs it.
       .val {
         min-width: 0;
 
@@ -438,8 +409,6 @@ body {
       }
     }
 
-    // Settings is a square chip with a slider icon; its knobs slide over
-    // as it opens.
     > .settings {
       display: grid;
       place-items: center;
@@ -455,7 +424,7 @@ body {
         transition: translate var(--duration-follow) var(--ease-out);
       }
 
-      // Closing, it's closed from the first frame, not once the bar is.
+      // Drop the open background on the first frame of closing.
       &:is(.folding > *) {
         background: none;
       }
@@ -485,8 +454,7 @@ body {
       display: none;
     }
 
-    // Settings, below the bar: each row a label and its control.
-    // One kind of label, one row height, one left edge for every control.
+    // Settings rows: one label column, one row height, one left edge.
     .row-label {
       display: block;
       grid-column: 1;
@@ -498,7 +466,6 @@ body {
       color: var(--text-muted);
     }
 
-    // Typeface and feel have their place on the bar already.
     .row-label:has(+ .drop #face),
     .row-label:has(+ #feel) {
       display: none !important;
@@ -528,7 +495,6 @@ body {
       clip-path: none;
     }
 
-    // The alphabet chip's text lines up with the controls about it.
     .drop:has(#alphabet) > .chip {
       margin-left: -12px;
     }
@@ -591,7 +557,6 @@ body {
       padding: 6px 0 2px;
     }
 
-    // Closed, Settings is only the bar.
     &:not(:has(#settings[aria-expanded="true"])) {
       :is(
         .lead,
@@ -606,7 +571,6 @@ body {
       }
     }
 
-    // Opening, the rows come in.
     &:has(#settings[aria-expanded="true"])
       :is(
         .lead,
@@ -622,9 +586,7 @@ body {
   }
 }
 
-// A laptop's width: the bar sheds what it can spare to stay on one row.
-// The summary and the Size and Abc labels make way, Size keeping its name
-// for screen readers, and your line starts shorter.
+// Bar: laptop (<1400px). Drop the summary and Size/Abc labels (Size stays for screen readers), shorten the field.
 @media (max-width: 1399px) {
   .dock .tune #summary {
     display: none;
@@ -651,7 +613,6 @@ body {
   }
 }
 
-// A label set like the line's measurements.
 .k {
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -660,8 +621,7 @@ body {
   color: var(--text-muted);
 }
 
-// A chip is one line of text, so its label, value and chevron share a
-// baseline whatever faces they're set in.
+// Fixed line-height so label, value and chevron share a baseline.
 .chip {
   position: relative;
   display: inline-block;
@@ -692,16 +652,13 @@ body {
     margin-right: 7px;
   }
 
-  // The caret is two short bars meeting in a point, as mangomint.com's
-  // nav dropdowns draw it: opening, each bar swings to the other's angle
-  // and the point folds from down to up. It darkens under the pointer.
+  // Chevron: two bars that swap angles on open, as on mangomint.com's nav.
   .chev {
     position: relative;
     display: inline-block;
     width: 9px;
     height: 9px;
     margin-left: 7px;
-    // Its middle on the middle of the capitals beside it.
     vertical-align: 0;
     color: var(--text-muted);
     transition: color var(--duration-fast) var(--ease-out);
@@ -715,7 +672,6 @@ body {
       height: 1.5px;
       border-radius: 8px;
       background: currentColor;
-      // In step with the list it opens.
       transition: transform var(--duration-fast) var(--ease-out);
     }
 
@@ -760,7 +716,6 @@ body {
   }
 }
 
-// A chip with a list of its own: the list hangs from it.
 .drop {
   position: relative;
   display: inline-block;
@@ -777,14 +732,12 @@ body {
   line-height: inherit;
 }
 
-// A chip that is a select: what it shows is drawn on the chip, and the
-// select lies over all of it, unseen, so a click anywhere opens it.
+// The select overlays the chip, invisible, so a click anywhere opens it.
 .pick {
   text-align: start;
   cursor: pointer;
 
-  // Its own sample in the chosen face, in a box of its own width so a
-  // wider face doesn't move the bar.
+  // Fixed-width sample so a wider face doesn't move the bar.
   .face-k {
     display: inline-block;
     width: 1.6em;
@@ -797,12 +750,10 @@ body {
   }
 }
 
-// Every choice stacked in one cell, only the chosen one seen: as wide as
-// the longest, so picking one never moves the bar.
+// Choices stacked in one cell, sized to the longest, so the bar never shifts.
 .val {
   display: inline-grid;
 
-  // The new choice fades in over the old.
   > span {
     grid-area: 1 / 1;
     opacity: 0;
@@ -814,7 +765,7 @@ body {
   }
 }
 
-// Size: its figure in a box of three, so the bar holds still as it changes.
+// Fixed 3ch figure so the bar holds still.
 .sizer {
   .num {
     display: inline-block;
@@ -829,14 +780,12 @@ body {
   }
 }
 
-// What the size is doing, in a quiet line under the slider.
 .panel-foot .status {
   font-size: var(--text-meta);
   color: var(--text-muted);
 }
 
-// Fit to the window and Fits the window share one place, and cross over
-// in it; its text lines up with the status it replaces.
+// Fit and Fits share one grid cell and crossfade.
 .slide .panel-foot {
   display: grid;
   justify-content: start;
@@ -852,7 +801,6 @@ body {
   margin-left: -10px;
 }
 
-// The size slider, hung from its chip like a list.
 .slide {
   left: 0;
   display: grid;
@@ -874,8 +822,7 @@ body {
   transition: opacity var(--duration-base) var(--ease-out);
 }
 
-// Three choices out at once, the one you're on lifted out on a sliding
-// thumb: the feel, and the case.
+// Segmented control with a sliding thumb (feel, case).
 .seg {
   position: relative;
   display: grid;
@@ -940,13 +887,12 @@ body {
   }
 }
 
-// The case reads as its own letters, set close.
 .case label {
   padding-inline: 10px;
 }
 
 .tune {
-  // Room for the widest it gets, so a feel's numbers don't move the bar.
+  // Reserve the widest summary.
   #summary {
     display: inline-block;
     min-width: 11.5ch;
@@ -954,12 +900,10 @@ body {
   }
 }
 
-// What a chip opens: the Tune panel and the typeface and alphabet lists,
-// all one raised surface opening from under their chip.
+// Popups: Tune panel and the face/alphabet lists.
 .pop {
   position: absolute;
-  // Over whatever in the bar it opens across, the line's field included,
-  // as on a phone, where a menu hangs over the open settings.
+  // Above the line field, which can open across the bar.
   z-index: 5;
   top: calc(100% + 14px);
   border-radius: 16px;
@@ -984,7 +928,6 @@ body {
   }
 }
 
-// The numbers, opening out of the Tune chip at the bar's end.
 .panel {
   right: 0;
   display: grid;
@@ -994,12 +937,11 @@ body {
   transform-origin: top right;
 }
 
-// A list hung from its chip, the chosen one ticked.
 .menu {
   left: 0;
   min-width: max(100%, 220px);
   display: grid;
-  // One column no wider than the list, so a long alphabet trails off.
+  // One column capped at the list width so long alphabets truncate.
   grid-template-columns: minmax(0, 1fr);
   gap: 2px;
   max-width: calc(100vw - 2 * var(--edge));
@@ -1033,8 +975,7 @@ body {
     }
   }
 
-  // Each sample takes its face only once the list has first opened, so
-  // the page doesn't fetch every face to fill a list nobody has opened.
+  // Faces load on first open, so a closed list fetches nothing.
   .sample {
     width: 1.6em;
     font-size: 17px;
@@ -1045,7 +986,6 @@ body {
     font-family: var(--sample-family);
   }
 
-  // A choice and what it means.
   .opt {
     display: grid;
     gap: 2px;
@@ -1098,7 +1038,6 @@ body {
   }
 }
 
-// A setting and, under its slider, what it does.
 .setting .help {
   margin: -3px 0 8px 76px;
   font-size: 11.5px;
@@ -1150,7 +1089,6 @@ input[type="range"] {
     background: var(--text);
   }
 
-  // The knob: firmer under the pointer, a little larger in hand.
   &::-webkit-slider-thumb {
     appearance: none;
     width: 14px;
@@ -1209,7 +1147,7 @@ input[type="range"] {
     }
   }
 
-  // Focus shows on the knob, not as a box round the whole track.
+  // Focus ring on the knob, not the track.
   outline: none;
 
   &:focus-visible::-webkit-slider-thumb {
@@ -1225,8 +1163,7 @@ input[type="range"] {
   }
 }
 
-// Fit and Reset show only when there's something to undo: they fade in,
-// and out again before they leave.
+// Fit and Reset fade in and out; display transitions via allow-discrete.
 .fit,
 .reset,
 #fit,
@@ -1260,7 +1197,6 @@ input[type="range"] {
   }
 }
 
-// Under the numbers: put them back, or take them with you.
 .panel-foot {
   display: flex;
   align-items: center;
@@ -1270,7 +1206,6 @@ input[type="range"] {
   border-top: 1px solid rgb(0 0 0 / 0.06);
 }
 
-// The settings you tuned, or the whole file, which is the point.
 .copies {
   display: flex;
   margin-left: auto;
@@ -1289,18 +1224,14 @@ input[type="range"] {
   }
 }
 
-// The sheet is a stage: it takes the height the bar leaves, the line and
-// its columns stand in the middle of it, and the legend sits at its foot
-// like a caption. A tall window gives the specimen room on both sides of
-// it, not a blank page under it; a short one stacks as before.
+// Sheet: fills the height under the bar; line and columns centered, legend at the foot.
 .sheet {
   position: relative;
   display: flex;
   flex-direction: column;
   padding-top: 56px;
   min-width: 0;
-  // Unseen until the line is set in its face and fitted, then in: nothing
-  // paints at the wrong size and jumps.
+  // Hidden until the face loads and the line fits, to avoid a resize flash.
   opacity: 0;
   transition: opacity var(--duration-enter) var(--ease-out);
 
@@ -1324,16 +1255,13 @@ input[type="range"] {
   font-variation-settings: "opsz" 96;
   line-height: 0.9;
   letter-spacing: var(--face-tracking);
-  // Run it across the letters to graze them.
   cursor: crosshair;
   white-space: nowrap;
   text-wrap: balance;
-  // Room for the last letter's ink past its advance.
   padding-right: 0.06em;
-  // A sideways drag scrambles the letters; only an upward one scrolls.
+  // Horizontal drag scrambles; vertical still scrolls.
   touch-action: pan-y;
-  // Pressed or dragged on a phone, it scrambles; it never selects, nor
-  // brings up the copy menu.
+  // No selection or copy callout on touch.
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -1342,11 +1270,9 @@ input[type="range"] {
     white-space: normal;
   }
 
-  // Its ring stands clear of the letters, rounded like the bar's.
   border-radius: 12px;
   outline-offset: 12px;
 
-  // A column in focus: its letter alone stays in ink.
   [data-i] {
     transition: color var(--duration-base) var(--ease-out);
   }
@@ -1356,8 +1282,7 @@ input[type="range"] {
   }
 }
 
-// Set like the line, out of sight, to size it. As wide as the longest
-// line at full size, so fixed, where it can't widen the page.
+// Offscreen clone that measures the line at full size; fixed so it can't widen the page.
 .probe {
   position: fixed;
   top: 0;
@@ -1368,8 +1293,7 @@ input[type="range"] {
   pointer-events: none;
 }
 
-// The bracket that travels with the pointer: a rule and two ticks drawn in
-// ink, moved and stretched by transform alone so a sweep stays smooth.
+// Measuring bracket: moves and scales by transform only.
 .meter {
   position: absolute;
   inset: 0 0 auto;
@@ -1395,7 +1319,6 @@ input[type="range"] {
     }
   }
 
-  // Set in place without moving, before the first draw.
   &.instant span {
     transition: none;
   }
@@ -1424,11 +1347,9 @@ input[type="range"] {
   }
 }
 
-// Each letter's look-alikes, hanging under it.
 .cols {
   position: relative;
-  // The rows of look-alikes, plus the bracket above them and the count
-  // below, so the count never runs into the legend.
+  // Rows plus the bracket above and count below, so the count clears the legend.
   height: calc(var(--pool-size) * 1.18 * var(--rows, 8) + 60px);
   margin-top: 14px;
   margin-bottom: 32px;
@@ -1459,14 +1380,12 @@ input[type="range"] {
   font-variation-settings: "opsz" 24;
   line-height: 1.18;
   color: var(--pool);
-  // Its middle glides to the new letter's, by transform alone; its width
-  // snaps, under a bracket that's drawn in while the letter scrambles.
+  // Glides by transform; width snaps under the bracket.
   transition:
     transform var(--duration-move) var(--ease-out),
     color var(--duration-base) var(--ease-out),
     opacity var(--duration-base) var(--ease-out);
 
-  // Its letter is scrambling.
   &.live {
     color: var(--pool-live);
   }
@@ -1483,7 +1402,6 @@ input[type="range"] {
     transition: none;
   }
 
-  // One column in focus: it darkens and the rest step back.
   .focusing & {
     opacity: 0.18;
   }
@@ -1495,7 +1413,6 @@ input[type="range"] {
     .w {
       color: transparent;
 
-      // The travelling bracket measures it now; this one steps aside.
       &::before {
         opacity: 0;
       }
@@ -1528,7 +1445,6 @@ input[type="range"] {
     }
   }
 
-  // Lit at once, then fading back: a trail, not a strobe.
   span {
     transition: color var(--duration-settle) var(--ease-out);
   }
@@ -1556,8 +1472,7 @@ input[type="range"] {
 
   transition: color var(--duration-settle) var(--ease-out);
 
-  // The bracket measures the letter: it pulls in while the letter is in
-  // flux and springs back out to its width as it lands.
+  // Pulls in while the letter scrambles, springs out on landing.
   &::before {
     content: "";
     position: absolute;
@@ -1570,7 +1485,6 @@ input[type="range"] {
       border-color var(--duration-settle) var(--ease-out);
   }
 
-  // Grazed: the letters under the pointer have their brackets inked.
   .cols:not(.decoding) .live & {
     color: var(--text);
 
@@ -1613,10 +1527,9 @@ input[type="range"] {
   color: var(--text-muted);
 }
 
-// Under a small line: the index instead of the columns.
+// Index: replaces the columns under a small line.
 .index {
   display: none;
-  // Touched to light a letter, as the columns are, not to select it.
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -1628,10 +1541,8 @@ input[type="range"] {
   }
 
   .index {
-    // Columns of one width, the block centred under the line and a short
-    // last row starting at the left like the rest. Never more than half
-    // the width, so a phone still fits two. Its type grows with a tall
-    // window, as the columns' does, and the entries with it.
+    // One-width columns, centered, at most half the width so a phone fits two.
+    // Type scales with window height.
     display: grid;
     grid-template-columns: repeat(auto-fill, min(12.5em, calc(50% - 2px)));
     font-size: clamp(13px, 1.45vh, 18px);
@@ -1641,25 +1552,20 @@ input[type="range"] {
   }
 }
 
-// Too narrow for one row at a size for columns, the line is set on two,
-// with room kept for two even when a line fits on one, so the index under
-// it never jumps.
+// Two-row line keeps two rows even when it fits on one, so the index doesn't jump.
 .sheet.split > #stage {
   min-height: 1.8em;
 }
 
-// Stacked under a small line, the index runs longer or shorter with the
-// line's letters, so the line holds a fixed distance under the bar and
-// the index grows down from it, rather than both re-centring by height.
+// Stacked (<1000px, mirrors `stacked` in main.ts): the line holds a fixed distance under
+// the bar and the index grows down from it.
 @media (max-width: 999px) {
   .sheet.indexed > #stage {
     margin-top: 0;
   }
 }
 
-// A wide window with a small line: the stage split in half, the line
-// centred in the left, its index centred in the right, the legend under
-// both.
+// Wide (>=1000px): line left, index right, legend across both.
 @media (min-width: 1000px) {
   .sheet.indexed {
     display: grid;
@@ -1696,7 +1602,6 @@ input[type="range"] {
   transition:
     background-color var(--duration-fast) var(--ease-out),
     border-radius var(--duration-fast) var(--ease-out);
-  // In with the line, as the columns come in.
   animation: fade-in var(--duration-enter) var(--ease-out) both;
 
   &.hot {
@@ -1711,8 +1616,6 @@ input[type="range"] {
     line-height: 1;
   }
 
-  // How many of it the line has, when it's more than one: under the
-  // letter, set like its measurements.
   .times {
     display: block;
     margin-top: 0.35em;
@@ -1739,7 +1642,6 @@ input[type="range"] {
     color: var(--pool);
     word-break: break-all;
 
-    // Lit at once, then fading back, as in the columns.
     span {
       transition: color var(--duration-settle) var(--ease-out);
     }
@@ -1752,12 +1654,8 @@ input[type="range"] {
   }
 }
 
-// Under a line on two rows the index is a table: one row a letter, its
-// width and count, then its look-alikes on the same line, so ten letters
-// fit in a glance. It takes the room down to the legend, its rows sharing
-// what's spare up to a comfortable height, and its type as large as the
-// longest row of look-alikes leaves room for. Its margins close up on a
-// short screen, so ten still fit above the legend.
+// Two-row index is a table, one row per letter. Rows share spare height up to a cap,
+// type fits the longest look-alike row, margins shrink on short screens.
 .split {
   container-type: inline-size;
 
@@ -1789,11 +1687,8 @@ input[type="range"] {
       border-bottom: 0;
     }
 
-    // Lit, it stands up off the page as the bar does, in the bar's own
-    // paper and shade, with the rules either side of it let go.
-    // It reaches out past the rules into the page's margin, its padding
-    // taking up the difference, so its letters keep their places and
-    // still sit clear of its edge.
+    // Lit row lifts like the bar. Negative margin reaches into the page margin;
+    // padding keeps the letters in place.
     &.hot {
       position: relative;
       z-index: 1;
@@ -1814,12 +1709,11 @@ input[type="range"] {
       font-size: 1.6em;
     }
 
-    // One line, whatever the width: three figures still fit its column.
+    // Keep on one line so three figures fit the column.
     .about {
       white-space: nowrap;
     }
 
-    // Beside the letter, on its line.
     .times {
       display: inline;
       margin: 0 0 0 0.3em;
@@ -1836,9 +1730,7 @@ input[type="range"] {
   }
 }
 
-// The specimen's legend, ruled off under it: what the columns show on the
-// left, what you can do on the right. Too narrow for both on one row, what
-// you can do drops under the key, at its left.
+// Legend: key left, hints right; hints wrap under the key when narrow.
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -1864,12 +1756,10 @@ input[type="range"] {
   }
 }
 
-// It changes to describe the column under the pointer; it keeps its row.
 .legend-key {
   min-height: 1.4em;
 }
 
-// What to try, said for the hand you have.
 .by-touch {
   display: none;
 }
@@ -1884,14 +1774,12 @@ input[type="range"] {
   }
 }
 
-// Pause, at the end of what to try: a word and its sign, quiet until
-// you're on it. The sign turns from bars to a triangle as it pauses.
+// Pause control; the sign swaps bars for a triangle when paused.
 .pause {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  // Spaced by the word space before it, so on a line of its own it starts
-  // at the text's edge.
+  // Spacing comes from the preceding word space, so it starts at the text edge when wrapped.
   color: var(--text-muted);
   white-space: nowrap;
   transition:
@@ -1906,7 +1794,6 @@ input[type="range"] {
 
   svg {
     align-self: center;
-    // The sign's own inset, taken back so its edge meets the text's.
     margin-left: -1.5px;
     fill: currentColor;
     overflow: visible;
@@ -1946,8 +1833,7 @@ input[type="range"] {
   }
 }
 
-// On a phone the spacing closes up on a short screen, so the page fits it
-// without a scroll whenever what's on it can.
+// Phone (<700px): tighter spacing on short screens so the page fits without scrolling.
 @include phone {
   .top {
     padding-top: clamp(12px, 4svh - 10px, 24px);
@@ -1962,9 +1848,7 @@ input[type="range"] {
     width: 100%;
   }
 
-  // On a phone the specimen sits under the bar and its index runs to the
-  // foot of the screen. The legend is left off: the index says what it
-  // is, and the line answers a tap without being told.
+  // Phone: the index runs to the foot; the legend is hidden since the index explains itself.
   .sheet {
     padding-top: clamp(16px, 6svh - 16px, 40px);
 
@@ -1977,7 +1861,7 @@ input[type="range"] {
     }
   }
 
-  // Three rows is too much screen to keep; on a phone it scrolls away.
+  // The bar scrolls away on a phone.
   .dock {
     position: relative;
     top: auto;

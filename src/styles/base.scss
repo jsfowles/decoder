@@ -10,8 +10,7 @@ body {
 }
 
 body {
-  // The screen with its toolbars showing. Safari has that as svh; Arc's
-  // svh runs on under its floating toolbar, and only dvh stops above it.
+  // svh in Safari; Arc's svh runs under its floating toolbar, so dvh caps it.
   min-height: min(100svh, 100dvh);
   background: var(--bg);
   color: var(--text);
@@ -54,13 +53,12 @@ a {
   color: var(--bg);
 }
 
-// Hidden means hidden, whatever display a component gives it.
+// Beats any component display rule.
 [hidden] {
   display: none !important;
 }
 
-// Rings fade on rather than blink: everything focusable carries a clear
-// one, inked when it's focused.
+// Rings fade in rather than blink.
 :where(a, button, input, select, textarea, [tabindex]) {
   outline: 1px solid transparent;
   outline-offset: 4px;
@@ -75,13 +73,12 @@ input {
   caret-color: var(--text);
 }
 
-// The bar stays over the page as it scrolls: what you tab to stops clear
-// of it.
+// Keep tabbed-to elements clear of the sticky bar.
 html {
   scroll-padding-top: 88px;
 }
 
-// First thing to tab to: past the bar's controls, straight to the line.
+// Skip link: first tab stop.
 .skip {
   position: fixed;
   top: 12px;
@@ -104,8 +101,7 @@ html {
   }
 }
 
-// The page's grain, under everything on it: the paper is textured, the
-// ink on it stays black.
+// Grain sits behind all content; ink stays untextured.
 body::before {
   content: "";
   position: fixed;
