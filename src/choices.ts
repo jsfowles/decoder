@@ -7,8 +7,7 @@ export const ALPHABETS: { id: string; label: string; chars: string }[] = [
   { id: "symbols", label: "#%$&/=+*<>", chars: "#%$&/=+*<>" },
 ];
 
-// The line's case. The text itself is cased, not just shown that way, so
-// its letters are measured as they're seen; the alphabet follows suit.
+// The text itself is cased, so its letters are measured as you see them.
 export type Case = "upper" | "lower" | "title";
 export const CASES: { id: Case; label: string; name: string }[] = [
   { id: "upper", label: "AA", name: "Uppercase" },
@@ -26,7 +25,6 @@ export const inCase = (text: string, c: Case) => {
   );
 };
 
-// The alphabet in the line's case: title case draws on both.
 export const alphabetIn = (chars: string, c: Case) =>
   c === "upper"
     ? chars.toUpperCase()
@@ -34,8 +32,6 @@ export const alphabetIn = (chars: string, c: Case) =>
       ? chars.toLowerCase()
       : [...new Set(chars.toUpperCase() + chars.toLowerCase())].join("");
 
-// How a letter scrambles and lands, each with the hold and stagger it
-// reads best at.
 export const FEELS: {
   id: Settings["feel"];
   label: string;
@@ -66,9 +62,6 @@ export const FEELS: {
   },
 ];
 
-// Faces with different width habits: a grotesque, a newspaper serif, a
-// display serif, a condensed, an extended and a monospace, where every
-// letter is the same width.
 export const FACES: {
   id: string;
   label: string;

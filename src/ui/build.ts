@@ -1,8 +1,6 @@
 import type { Frame } from "../decode";
 import { glyphSet } from "./fx";
 
-// A column under a letter, or an entry in the index: its glyph spans, and
-// which one is lit (`on`) or marked as the landed letter (`mark`).
 export type Col = {
   el: HTMLElement;
   glyphs: Map<string, HTMLElement>;
@@ -14,8 +12,6 @@ export type Col = {
 const stateOf = new WeakMap<HTMLElement, Col>();
 export const colOf = (el: HTMLElement) => stateOf.get(el)!;
 
-// Fills a column with up to `across * tall` glyphs and a "+N more" count.
-// Narrow columns (`short`) drop the word "more".
 export const fillCol = (
   col: HTMLElement,
   pool: string[],
@@ -41,9 +37,7 @@ export const fillCol = (
   return set;
 };
 
-// Rebuilds the index: one entry per distinct letter with its width, pool
-// size and all its look-alikes. A repeated letter shows "×N" on its first
-// entry. Returns entries aligned to letter positions (null for repeats).
+// A repeated letter gets one entry, marked ×N.
 export const fillIndex = (
   index: HTMLElement,
   text: string[],

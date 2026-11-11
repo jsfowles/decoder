@@ -25,14 +25,12 @@ const LINES = [
   "STAND BY",
   "OVER AND OUT",
 ];
-// ms between one line settling and the next starting.
 const REST = 2200;
-// ms a tap holds the line, standing in for a hovering mouse on touch.
+// A tap holds the line this long, standing in for you hovering with a mouse.
 const TAP_HOLD = 5000;
-// Line font-size range in px.
 const MAX = 168;
 const MIN = 32;
-// Below this size the columns get too small to read, so the index shows.
+// Below this the columns are too small to read, so you get the index.
 const SMALL = 80;
 
 const sheet = $("sheet");
@@ -46,13 +44,12 @@ const dock = $("dock");
 const index = $("index");
 const legend = sheet.querySelector<HTMLElement>(".legend")!;
 
-// Mirror the breakpoints in page.scss.
+// Mirror page.scss.
 const phone = matchMedia("(max-width: 759px)");
 const stacked = matchMedia("(max-width: 999px)");
 
 let settings: Settings = { ...DEFAULTS };
 let lettercase: Case = "upper";
-// The settings the engine gets, with the alphabet in the current case.
 const engine = (): Settings => ({
   ...settings,
   alphabet: alphabetIn(settings.alphabet, lettercase),
@@ -60,14 +57,11 @@ const engine = (): Settings => ({
 let own: string | null = null;
 let next = 0;
 let timer = 0;
-// A full decode is running (not a graze or stir). Only then do the
-// column brackets animate in.
 let running = false;
 const decoding = (on: boolean) => {
   running = on;
   cols.classList.toggle("decoding", on);
 };
-// The pointer is over the sheet, so the next line waits.
 let over = false;
 let paused = calm();
 
@@ -79,22 +73,18 @@ let drawnText = "";
 let enteredAt = 0;
 let last: Frame | null = null;
 
-// Fitted size: one size for every line, set by the widest, so the sheet
-// doesn't resize between lines. `chosen` is a size picked on the slider.
+// One fitted size for every line, set by the widest, so the sheet holds
+// still. `chosen` is a size you pick on the slider.
 let chosen: number | null = null;
 let indexed = false;
 let fitted = MAX;
 
-// --- Sizing -----------------------------------------------------------
-
-// Width of `t` at MAX, measured on a hidden probe.
 const wideAt = (t: string) => {
   probe.style.fontSize = `${MAX}px`;
   probe.textContent = t;
   return probe.getBoundingClientRect().width;
 };
 
-// Width of the wider half of `t`, split at the most even word break.
 const halves = (t: string) => {
   const words = t.split(" ");
   let best = wideAt(t);
@@ -109,7 +99,6 @@ const halves = (t: string) => {
   return best;
 };
 
-// The line's measure: the sheet, capped at the bar's width.
 const room = () => Math.min(sheet.clientWidth, dock.offsetWidth);
 
 const fitBy = (measure: (t: string) => number) => {
@@ -119,8 +108,6 @@ const fitBy = (measure: (t: string) => number) => {
   return wide ? Math.floor((MAX * room() * 0.98) / wide) : MAX;
 };
 
-// One row while it stays above SMALL. Below that, on stacked layouts, the
-// line splits onto two rows at roughly twice the size, with the index.
 const fit = () => {
   const one = fitBy(wideAt);
   const split = one < SMALL && stacked.matches;
@@ -130,7 +117,6 @@ const fit = () => {
   if (chosen !== null && chosen >= fitted) chosen = null;
 };
 
-// Look-alike glyph size, matching --pool-size.
 const cell = () =>
   Math.min(
     28,
@@ -143,7 +129,6 @@ const cell = () =>
     ),
   );
 
-// Rows of glyphs per column: as many as fit under the line, 3 to 12.
 const rows = () => {
   const size = parseFloat(getComputedStyle(line).fontSize);
   const top = sheet.getBoundingClientRect().top + scrollY;
@@ -153,7 +138,6 @@ const rows = () => {
   return Math.max(3, Math.min(12, Math.round(size / 9), fit));
 };
 
-// Applies the size for `text` and picks columns or index.
 const place = (text: string) => {
   const px = chosen ?? fitted;
   document.documentElement.style.setProperty("--line", `${px}px`);
@@ -180,10 +164,6 @@ const place = (text: string) => {
   $("fitted").hidden = chosen !== null;
 };
 
-// --- Columns and index ------------------------------------------------
-
-// Reads each letter's x and width: from its pinned box mid-run, or from
-// text ranges at rest.
 const measure = () => {
   const face = line.lastElementChild;
   geometry = [];
@@ -212,20 +192,17 @@ const measure = () => {
   }
 };
 
-// Column nodes are reused between lines: each slides to its new letter,
-// extras fade out, new ones fade in.
 let nodes: HTMLElement[] = [];
 
 const drawColumns = (pools: Frame["pools"]) => {
   const now = performance.now();
   if (d.text !== drawnText) enteredAt = now;
-  // Animate only the redraw right after a new line; others snap.
+  // Only the redraw right after a new line animates; the rest snap.
   const moving = now - enteredAt < 100;
   cols.classList.toggle("instant", !moving);
   drawnPools = pools;
   drawnText = d.text;
   columns = [];
-  // Read layout once, before any writes.
   const tall = rows();
   const size = cell();
   let k = 0;
@@ -265,7 +242,7 @@ const drawColumns = (pools: Frame["pools"]) => {
   });
   for (const gone of nodes.slice(k)) {
     gone.classList.add("out");
-    // After the fade-out (--duration-base).
+    // Matches --duration-base.
     setTimeout(() => gone.remove(), 240);
   }
   nodes = nodes.slice(0, k);
@@ -273,8 +250,6 @@ const drawColumns = (pools: Frame["pools"]) => {
   drawIndex(pools);
 };
 
-// Rebuild the index only when its content changes. Fade entries in only
-// for a new line.
 let listed = "";
 let listedText = "";
 const drawIndex = (pools: Frame["pools"]) => {
@@ -294,7 +269,6 @@ const drawIndex = (pools: Frame["pools"]) => {
   });
 };
 
-// Lights the glyph each scrambling letter shows, and marks landed ones.
 const light = (f: Frame) => {
   const shown = [...f.shown];
   const text = [...f.text];
@@ -320,10 +294,8 @@ const light = (f: Frame) => {
     });
 };
 
-// Slides the legend from its old position when the line above resizes.
-// Additive, so a second change mid-slide continues from where it is.
 const holdLegend = (change: () => void) => {
-  // Skip before first paint: there's no old position to slide from.
+  // Before first paint there's nowhere to slide from.
   if (!sheet.classList.contains("ready")) return change();
   const from = legend.getBoundingClientRect().top;
   change();
@@ -335,8 +307,6 @@ const holdLegend = (change: () => void) => {
     composite: "add",
   });
 };
-
-// --- Cycling lines ----------------------------------------------------
 
 const later = () => {
   clearTimeout(timer);
@@ -358,7 +328,6 @@ const d = decoder(line, engine(), { onFrame, graze: true });
 const run = (raw: string) => {
   const text = inCase(raw, lettercase);
   clearTimeout(timer);
-  // A new line restarts a tap hold and drops a tapped index entry.
   if (held) hold();
   if (rowHeld) letGo();
   holdLegend(() => place(text));
@@ -371,8 +340,6 @@ function cycle() {
   run(own ?? LINES[(next = (next + 1) % LINES.length)]);
 }
 
-// --- Holding the line -------------------------------------------------
-
 const wait = () => {
   over = true;
   clearTimeout(timer);
@@ -384,7 +351,6 @@ const carryOn = () => {
 sheet.addEventListener("pointerenter", (e) => {
   if (e.pointerType === "mouse") wait();
 });
-// Touch has no hover, so a tap holds the line for TAP_HOLD.
 let held = 0;
 function hold() {
   clearTimeout(held);
@@ -394,7 +360,7 @@ function hold() {
     carryOn();
   }, TAP_HOLD);
 }
-// Only keyboard focus holds it; clicks and taps also focus the line.
+// Only keyboard focus holds it, since clicking or tapping the line focuses it too.
 const keyed = () => !!sheet.querySelector(":focus-visible");
 sheet.addEventListener("pointerleave", (e) => {
   if (e.pointerType === "mouse" && !keyed()) carryOn();
@@ -420,17 +386,15 @@ pauseButton.addEventListener("click", () => {
 });
 showPaused();
 
-// Click plays the next line. Blur after pointer clicks so a later key
-// press doesn't trigger it; keyboard activation keeps focus.
+// Blur after a click so your next key press doesn't replay the line.
 stage.addEventListener("click", (e) => {
   if (performance.now() - tapped < 600) return;
   if (e.detail > 0) stage.blur();
   cycle();
 });
 
-// Taps are detected from pointer events, not click: a graze rebuilds the
-// letters under the finger, and mobile browsers drop the click when the
-// target is replaced. The click that may follow is ignored.
+// Taps come from pointer events: a graze rebuilds the letters under your
+// finger, and phones drop the click when its target is replaced.
 let tap: { id: number; x: number; y: number } | null = null;
 let tapped = -Infinity;
 stage.addEventListener("pointerdown", (e) => {
@@ -450,9 +414,6 @@ stage.addEventListener("pointerup", (e) => {
 });
 stage.addEventListener("pointercancel", () => (tap = null));
 
-// --- Inspecting a letter ----------------------------------------------
-
-// The key under the columns: a general note, or details for one column.
 const explain = (col?: HTMLElement) => {
   if (!col) {
     say(
@@ -472,7 +433,6 @@ const explain = (col?: HTMLElement) => {
   );
 };
 
-// Keeps letter `i` scrambling and highlighted while the rest dims.
 let stirring = 0;
 const inspect = (i: number | null) => {
   clearInterval(stirring);
@@ -484,13 +444,13 @@ const inspect = (i: number | null) => {
     line.querySelector(`[data-i="${i}"]`)?.classList.add("lit");
   };
   stir();
-  // Re-stir faster than it cools, so it never settles under the pointer.
+  // Re-stir faster than it cools, so it never settles under your pointer.
   stirring = window.setInterval(stir, 100);
 };
 
 const measureTo = meter(cols);
 
-// A column stays focused until another takes over, so crossing the gap
+// Focus sticks until another column takes it, so crossing the gap
 // between two doesn't drop it.
 let focused: HTMLElement | null = null;
 const focus = (col: HTMLElement | null) => {
@@ -524,7 +484,6 @@ index.addEventListener("pointerover", (e) =>
 index.addEventListener("pointerleave", (e) => {
   if (e.pointerType === "mouse") heat(null);
 });
-// A tapped entry stays lit for TAP_HOLD, since a finger lifts at once.
 let rowHeld = 0;
 const letGo = () => {
   clearTimeout(rowHeld);
@@ -541,14 +500,11 @@ index.addEventListener("pointerup", (e) => {
   rowHeld = window.setTimeout(letGo, TAP_HOLD);
 });
 
-// --- Settings bar -----------------------------------------------------
-
 const { toggle, list, gliding } = menus(dock, phone);
 const inputs = ["hold", "stagger", "match", "heat", "spill"] as const;
 const feel = $<HTMLFieldSetElement>("feel");
 const reset = $<HTMLButtonElement>("reset");
 const percent = () => `${Math.round(settings.match * 100)}%`;
-// Frames shown as time.
 const frames = (n: number) => {
   const ms = (n * 1000) / 60;
   return ms < 1000
@@ -557,7 +513,7 @@ const frames = (n: number) => {
 };
 
 const face = $<HTMLButtonElement>("face");
-// Load the menu's sample fonts on first hover or focus, not with the page.
+// Sample fonts load when you head for the chip, not with the page.
 const ready = () => $("face-menu").classList.add("ready");
 for (const type of ["pointerenter", "focus"])
   face.addEventListener(type, ready, { once: true });
@@ -581,7 +537,6 @@ const alphabet = list($("alphabet"), (id) => {
   run(d.text);
 });
 
-// On tablets, case and feel show as listboxes that drive the radios.
 const choose = (group: HTMLElement) => (id: string) => {
   const radio = group.querySelector<HTMLInputElement>(`input[value="${id}"]`);
   if (!radio) return;
@@ -629,14 +584,12 @@ for (const k of inputs) {
     const v = Math.min(Number(el.max), Math.max(Number(el.min), n));
     apply({ ...settings, [k]: k === "match" ? v / 100 : v });
   });
-  // On release, demo the change: replay the line for timing, or sweep the
-  // pointer across it for heat and spill.
+  // Let go of a slider and it shows you the change.
   el.addEventListener("change", () =>
     k === "heat" || k === "spill" ? sweep() : run(d.text),
   );
 }
 
-// Simulates a pointer pass across the line over 900ms.
 let sweeping = 0;
 const sweep = () => {
   cancelAnimationFrame(sweeping);
@@ -656,7 +609,7 @@ const sweep = () => {
 const tune = $<HTMLButtonElement>("tune");
 tune.addEventListener("click", () => toggle(tune));
 
-// --reach: how far the "your line" field expands, up to the feel divider.
+// --reach: how far your line's field opens, up to the feel divider.
 const write = $("write");
 const reach = () => {
   const stop = $("sep-feel");
@@ -679,7 +632,6 @@ $("case").addEventListener("change", (e) =>
   caseMenu.set((e.target as HTMLInputElement).value),
 );
 
-// Each feel comes with its own hold and stagger.
 feel.addEventListener("change", (e) => {
   const f = FEELS.find((f) => f.id === (e.target as HTMLInputElement).value);
   if (f) apply({ ...settings, feel: f.id, hold: f.hold, stagger: f.stagger });
@@ -693,7 +645,7 @@ $("case").addEventListener("change", (e) => {
   run(d.text);
 });
 
-// Reset hides itself, so move focus to the next button first.
+// Reset hides itself, so move focus on first.
 reset.addEventListener("click", () => {
   if (document.activeElement === reset) $("copy-settings").focus();
   apply({ ...DEFAULTS });
@@ -704,7 +656,6 @@ const ownInput = $<HTMLInputElement>("own");
 ownInput.addEventListener("keydown", (e) => {
   if (e.key === "Escape") ownInput.blur();
 });
-// Clearing the field returns to the built-in lines.
 ownInput.addEventListener("input", () => {
   if (own === null || ownInput.value.trim()) return;
   own = null;
@@ -725,8 +676,6 @@ $<HTMLButtonElement>("copy-file").addEventListener("click", (e) =>
   copy(e.currentTarget as HTMLButtonElement, source, status),
 );
 
-// --- Layout -----------------------------------------------------------
-
 const relayout = () => {
   fit();
   place(d.text);
@@ -735,8 +684,8 @@ const relayout = () => {
   if (!running) later();
 };
 
-// Only a width change refits the line. Height changes (mobile toolbar,
-// index growing) only re-place, so a running decode isn't interrupted.
+// Only a new width refits the line, so a phone toolbar showing or hiding
+// doesn't interrupt your decode.
 let resized = 0;
 let wide = 0;
 const resizing = new ResizeObserver(() => {
@@ -770,8 +719,6 @@ $("fit").addEventListener("click", () => {
   size.focus();
 });
 
-// The header name and links decode on load and on hover, slower than the
-// line so short words visibly land.
 const words = (
   [
     [".name a", "lower"],

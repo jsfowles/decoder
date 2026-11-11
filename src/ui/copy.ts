@@ -1,7 +1,6 @@
 import { DEFAULTS, type Settings } from "../decode";
 import { say } from "./fx";
 
-// The settings as a `decoder()` call, listing only what differs from DEFAULTS.
 export const asCode = (s: Settings) => {
   const changed = (Object.keys(DEFAULTS) as (keyof Settings)[]).filter(
     (k) => s[k] !== DEFAULTS[k],
@@ -11,8 +10,6 @@ export const asCode = (s: Settings) => {
   return `decoder(el, { ...DEFAULTS, ${fields.join(", ")} });`;
 };
 
-// Copies `text`, flashes the result on the button and announces it in
-// `status` (a live region).
 export const copy = async (
   button: HTMLButtonElement,
   text: string,

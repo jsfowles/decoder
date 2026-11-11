@@ -1,8 +1,5 @@
 import { calm } from "./fx";
 
-// A width bracket that follows the pointer across columns. It grows out
-// from the first column's middle, then slides and resizes to each next one
-// while its number counts to the new width.
 export const meter = (cols: HTMLElement) => {
   const el = document.createElement("div");
   el.className = "meter";
@@ -33,7 +30,7 @@ export const meter = (cols: HTMLElement) => {
     }
     const start = performance.now();
     const step = (now: number) => {
-      // 280ms ease-out quint, matching the bracket's --duration-follow.
+      // Matches --duration-follow.
       const t = Math.min(1, (now - start) / 280);
       reading = Math.round(from + (to - from) * (1 - (1 - t) ** 5));
       fig.textContent = String(reading);
@@ -51,7 +48,7 @@ export const meter = (cols: HTMLElement) => {
     const x = Number(col.dataset.x);
     const w = Number(col.dataset.w);
     if (!on) {
-      // Collapse to the middle without a transition, so it grows from there.
+      // Collapse to the middle with no transition, so it grows from there.
       el.classList.add("instant");
       span(x, x);
       reading = 0;

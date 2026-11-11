@@ -1,12 +1,9 @@
 import { calm, EASE } from "./fx";
 
-// Rows the Settings chip reveals on a phone.
 const ROWS =
   ".lead, .row-label, .write, .sizer, .case, .drop:has(#alphabet), .panel";
 
-// The bar's chips: each opens the element after it, one at a time. Escape
-// or a click outside closes it. On a phone, Settings opens the whole bar
-// (`dock`) and animates its height.
+// On a phone, Settings opens the whole bar and animates its height.
 export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
   const chips = [
     ...dock.querySelectorAll<HTMLButtonElement>("button[aria-expanded]"),
@@ -17,8 +14,7 @@ export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
     chip.id === "settings" ? dock : (chip.nextElementSibling as HTMLElement);
   const within = (chip: HTMLElement, node: Node) =>
     chip.contains(node) || opens(chip).contains(node);
-  // Whether `chip` lives inside what `c` opens. Chips on the bar's own row
-  // aren't inside Settings, so opening one closes Settings.
+  // Chips on the bar's own row aren't inside Settings, so opening one closes it.
   const holds = (c: HTMLElement, chip: HTMLElement) =>
     c.id === "settings" ? !!chip.closest(ROWS) : opens(c).contains(chip);
   const smooth = () => phone.matches && !calm();
@@ -39,8 +35,7 @@ export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
     });
     return growing;
   };
-  // Both directions pick up from the current height and opacity, so
-  // reversing mid-way doesn't jump.
+  // Both pick up from the current height and opacity, so you can reverse mid-way.
   const unfold = (chip: HTMLButtonElement) => {
     const from = dock.getBoundingClientRect().height;
     growing?.cancel();
@@ -77,7 +72,6 @@ export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
         },
       ),
     );
-    // Closing is quicker than opening.
     glide(from, to, 240).onfinish = () => {
       for (const f of fades) f.cancel();
       dock.classList.remove("folding");
@@ -97,8 +91,7 @@ export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
     for (const c of chips.filter(isOpen))
       if (!within(c, e.target as Node)) close(c);
   });
-  // Tabbing out closes a popup. Not Settings: on a phone its rows are part
-  // of the bar.
+  // Tabbing away closes a popup. Not Settings: on a phone its rows are the bar.
   for (const c of chips.filter((c) => c.id !== "settings"))
     for (const el of [c, opens(c)])
       el.addEventListener("focusout", (e) => {
@@ -120,8 +113,6 @@ export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
     else toggle(settings, true);
   });
 
-  // A chip whose popup is a listbox. Works like a select by pointer or
-  // keys, and marks the chosen value in the chip.
   const list = (chip: HTMLButtonElement, onPick: (id: string) => void) => {
     const menu = chip.nextElementSibling as HTMLElement;
     const options = [...menu.querySelectorAll<HTMLElement>("[role=option]")];
@@ -143,8 +134,8 @@ export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
       set(o.dataset.v!);
       onPick(value);
     };
-    // Keyboard open focuses the chosen option (with a ring). Pointer open
-    // focuses the list, so no ring shows.
+    // Opened by keyboard, focus the chosen option. By pointer, focus the list so
+    // no ring shows.
     chip.addEventListener("click", (e) => {
       toggle(chip);
       if (isOpen(chip))
@@ -182,7 +173,6 @@ export const menus = (dock: HTMLElement, phone: MediaQueryList) => {
   return {
     toggle,
     list,
-    // True while the phone bar is animating its height.
     gliding: () => growing?.playState === "running",
   };
 };

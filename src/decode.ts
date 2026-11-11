@@ -1,3 +1,29 @@
+/*!
+ * Source: https://github.com/jsfowles/decoder/blob/main/src/decode.ts
+ *
+ * MIT License
+ *
+ * Copyright (c) 2026 Jacob Fowles
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 // A text decode. Each letter scrambles through look-alikes of its own width,
 // so the line settles without moving. One file, no dependencies.
 
@@ -67,10 +93,8 @@ const ZWSP = "​";
 // gets the nearest widths instead of sitting still.
 const LEAST = 3;
 
-// How a letter is drawn: its opacity, and its blur in em.
 type Look = { o: number; b: number };
 const INK: Look = { o: 1, b: 0 };
-// Frames to reach full ink after landing, per feel.
 const FADE = { sharp: 0, soft: 16, focus: 17 };
 
 /**
@@ -86,7 +110,6 @@ export const poolsFor = (
   const pool = [...alphabet].map((ch) => ({ ch, w: width(ch) }));
   if (!pool.length) return chars.map(() => null);
   return chars.map((ch) => {
-    // Any letter or digit, accented and non-Latin included.
     if (!/[\p{L}\p{N}]/u.test(ch)) return null;
     const w = width(ch);
     const near = pool.filter(
@@ -94,7 +117,6 @@ export const poolsFor = (
     );
     if (near.length >= Math.min(LEAST, pool.length))
       return near.map((p) => p.ch);
-    // The nearest widths, kept in the alphabet's order.
     const nearest = new Set(
       [...pool]
         .sort((a, b) => Math.abs(a.w - w) - Math.abs(b.w - w))
@@ -161,7 +183,6 @@ export const decoder = (
   let mode: "rest" | "decode" | "graze" = "rest";
   let heat: number[] = [];
   let fresh = false;
-  // Each letter's width and where lines break, read off the plain text.
   let plan: { widths: number[]; breaks: Set<number> } | null = null;
   // Mid-run, each letter sits in a box pinned to its width, so a slightly
   // wider look-alike can't shift its neighbours.
@@ -180,7 +201,6 @@ export const decoder = (
     pools = poolsFor(chars, width, s.alphabet, s.match);
   };
 
-  // Reads each letter's box and where each line starts, off the plain text.
   const measure = () => {
     face.style.whiteSpace = "";
     face.textContent = text;
@@ -259,7 +279,6 @@ export const decoder = (
       parts.push(box);
       return box;
     });
-    // One line holds by not wrapping; more by their breaks.
     face.style.whiteSpace = breaks.size ? "pre" : "nowrap";
     face.replaceChildren(...parts);
   };
@@ -282,7 +301,6 @@ export const decoder = (
         if (box.textContent !== shown[i]) box.textContent = shown[i];
         const look = looks?.[i];
         if (!look) return;
-        // Promote to a layer only once it fades or blurs.
         if (look !== INK && !box.style.willChange)
           box.style.willChange = "opacity, filter";
         const o = String(Math.round(look.o * 100) / 100);
@@ -312,7 +330,6 @@ export const decoder = (
     );
   };
 
-  // A letter mid-scramble, `p` of the way to landing.
   const lookOf = (p: number): Look =>
     s.feel === "sharp"
       ? INK
@@ -321,12 +338,9 @@ export const decoder = (
           { o: 0.28 + 0.37 * p * p, b: 0 }
         : // Lands slightly blurred to hide the swap, then sharpens.
           { o: 0.35 + 0.3 * p, b: 0.02 + 0.045 * (1 - p) ** 2 };
-  // Frames between swaps: 0 for sharp, 1 to 3 for soft as it lands, 2 for focus.
   const gapOf = (p: number) =>
     s.feel === "sharp" ? 0 : s.feel === "soft" ? 1 + 2 * p * p : 2;
 
-  // Per-letter run state: shown glyph, next swap frame, was-live, landed
-  // frame, and look at landing.
   let shown: string[] = [];
   let next: number[] = [];
   let was: boolean[] = [];
@@ -356,7 +370,6 @@ export const decoder = (
     } else return;
 
     live.forEach((on, i) => {
-      // A letter starting to scramble swaps at once.
       if (on && !was[i]) next[i] = frame;
       if (!on && was[i]) {
         landed[i] = frame;
@@ -368,7 +381,6 @@ export const decoder = (
     const fading = (i: number) => frame - landed[i] < fade;
     if (!live.includes(true) && !chars.some((_, i) => fading(i))) return rest();
 
-    // Fresh heat answers on the very next frame.
     if (fresh || t - wrote >= DUE) {
       fresh = false;
       wrote = t;
@@ -391,7 +403,6 @@ export const decoder = (
     raf = requestAnimationFrame(tick);
   };
 
-  // The first frame draws at once, so a run starts on the input that asked.
   const start = () => {
     cancelAnimationFrame(raf);
     t = 0;
@@ -405,8 +416,6 @@ export const decoder = (
     tick(performance.now());
   };
 
-  // The letter under a point: its box while running, else a caret in the
-  // plain text.
   const letterAt = (e: PointerEvent) => {
     const box = e.target;
     if (box instanceof HTMLElement && box.parentNode === face && box.dataset.i)
@@ -442,8 +451,6 @@ export const decoder = (
     return Math.min(chars.length - 1, i);
   };
 
-  // Heats letter `i` to `hot` and its neighbours to `spill`, starting a
-  // graze if one isn't running. Ignored mid-decode.
   const heatAt = (i: number, hot: number, spill: number) => {
     if (mode === "decode" || document.hidden || still()) return;
     if (i < 0 || i >= chars.length) return;
@@ -458,7 +465,6 @@ export const decoder = (
     if (i > 0) heat[i - 1] = Math.max(heat[i - 1], spill);
     if (i < heat.length - 1) heat[i + 1] = Math.max(heat[i + 1], spill);
     fresh = true;
-    // Heated first: the first frame draws at once and needs something hot.
     if (begin) start();
   };
 

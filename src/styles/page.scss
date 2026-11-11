@@ -10,8 +10,7 @@
   }
 }
 
-// Safe-area insets keep the legend clear of a notch or floating toolbar.
-// Header shares the bar's width so its name and links line up with the bar.
+// Safe-area insets keep the legend clear of a notch or a floating toolbar.
 body {
   display: grid;
   grid-template-rows: auto auto 1fr;
@@ -70,7 +69,6 @@ body {
   }
 }
 
-// Bar: sticky, above the sheet
 .dock {
   position: sticky;
   top: 16px;
@@ -88,8 +86,8 @@ body {
   font-size: var(--text-body-sm);
 }
 
-// Frost sits on ::before so the panel inside isn't blurred against only the bar.
-// The panel stays solid, and .dock casts the shadow so the phone clip can't cut it.
+// Frost sits on ::before so the panel isn't blurred against the bar, and the
+// dock casts the shadow so the phone clip can't cut it.
 .dock {
   box-shadow: var(--shadow-raised);
 }
@@ -119,7 +117,7 @@ body {
   border-radius: inherit;
 }
 
-// Line field: opens over the type settings via clip-path; JS sets --reach.
+// Your line's field opens over the type settings. main.ts sets --reach.
 .write {
   position: relative;
   flex: 0 0 220px;
@@ -148,7 +146,6 @@ body {
     }
   }
 
-  // White while focused; holds until the field closes.
   &::before {
     content: "";
     position: absolute;
@@ -184,7 +181,6 @@ body {
       color: var(--text-muted);
     }
 
-    // 16px stops iOS zooming on focus.
     @media (hover: none) {
       font-size: 16px;
     }
@@ -199,7 +195,6 @@ body {
   }
 }
 
-// Bar: desktop (>=1180px). The field opens over the type settings.
 @media (min-width: 1180px) {
   .write:focus-within .field {
     clip-path: inset(0 0 0 0 round 9px);
@@ -211,7 +206,6 @@ body {
   }
 }
 
-// Return key hint, hidden when the field is empty.
 .go {
   display: grid;
   place-items: center;
@@ -246,7 +240,6 @@ body {
   }
 }
 
-// Bar: controls inline; Settings chip and row labels are phone-only.
 .controls {
   display: contents;
 }
@@ -256,8 +249,6 @@ body {
   display: none;
 }
 
-// Bar: tablet (760-1179px). Case and feel become lists, the face chip drops its sample,
-// and the line collapses to a pen that opens the field over the bar.
 .dock .pen,
 .dock .seg-drop {
   display: none;
@@ -336,8 +327,7 @@ body {
   }
 }
 
-// Bar: phone (<760px). Mirrors the `phone` matchMedia in main.ts.
-// Settings opens the bar downward as a label/control grid.
+// Phone (<760px). Mirrors `phone` in main.ts.
 @media (max-width: 759px) {
   .dock {
     display: grid;
@@ -365,7 +355,6 @@ body {
       background: rgb(0 0 0 / 0.07);
     }
 
-    // Face name truncates before the caret is crowded out.
     .drop:has(#face) {
       grid-area: 1 / 1 / 2 / 3;
       justify-self: start;
@@ -383,7 +372,6 @@ body {
         flex: none;
       }
 
-      // Show only the chosen name so the caret hugs it.
       .val {
         min-width: 0;
 
@@ -424,7 +412,6 @@ body {
         transition: translate var(--duration-follow) var(--ease-out);
       }
 
-      // Drop the open background on the first frame of closing.
       &:is(.folding > *) {
         background: none;
       }
@@ -454,7 +441,6 @@ body {
       display: none;
     }
 
-    // Settings rows: one label column, one row height, one left edge.
     .row-label {
       display: block;
       grid-column: 1;
@@ -586,7 +572,6 @@ body {
   }
 }
 
-// Bar: laptop (<1400px). Drop the summary and Size/Abc labels (Size stays for screen readers), shorten the field.
 @media (max-width: 1399px) {
   .dock .tune #summary {
     display: none;
@@ -621,7 +606,6 @@ body {
   color: var(--text-muted);
 }
 
-// Fixed line-height so label, value and chevron share a baseline.
 .chip {
   position: relative;
   display: inline-block;
@@ -652,7 +636,6 @@ body {
     margin-right: 7px;
   }
 
-  // Chevron: two bars that swap angles on open, as on mangomint.com's nav.
   .chev {
     position: relative;
     display: inline-block;
@@ -732,12 +715,11 @@ body {
   line-height: inherit;
 }
 
-// The select overlays the chip, invisible, so a click anywhere opens it.
+// The select sits invisible over the chip, so you can click anywhere on it.
 .pick {
   text-align: start;
   cursor: pointer;
 
-  // Fixed-width sample so a wider face doesn't move the bar.
   .face-k {
     display: inline-block;
     width: 1.6em;
@@ -750,7 +732,7 @@ body {
   }
 }
 
-// Choices stacked in one cell, sized to the longest, so the bar never shifts.
+// Choices stack in one cell, sized to the longest, so the bar never shifts.
 .val {
   display: inline-grid;
 
@@ -765,7 +747,6 @@ body {
   }
 }
 
-// Fixed 3ch figure so the bar holds still.
 .sizer {
   .num {
     display: inline-block;
@@ -785,7 +766,6 @@ body {
   color: var(--text-muted);
 }
 
-// Fit and Fits share one grid cell and crossfade.
 .slide .panel-foot {
   display: grid;
   justify-content: start;
@@ -822,7 +802,6 @@ body {
   transition: opacity var(--duration-base) var(--ease-out);
 }
 
-// Segmented control with a sliding thumb (feel, case).
 .seg {
   position: relative;
   display: grid;
@@ -892,7 +871,6 @@ body {
 }
 
 .tune {
-  // Reserve the widest summary.
   #summary {
     display: inline-block;
     min-width: 11.5ch;
@@ -900,10 +878,8 @@ body {
   }
 }
 
-// Popups: Tune panel and the face/alphabet lists.
 .pop {
   position: absolute;
-  // Above the line field, which can open across the bar.
   z-index: 5;
   top: calc(100% + 14px);
   border-radius: 16px;
@@ -941,7 +917,6 @@ body {
   left: 0;
   min-width: max(100%, 220px);
   display: grid;
-  // One column capped at the list width so long alphabets truncate.
   grid-template-columns: minmax(0, 1fr);
   gap: 2px;
   max-width: calc(100vw - 2 * var(--edge));
@@ -975,7 +950,6 @@ body {
     }
   }
 
-  // Faces load on first open, so a closed list fetches nothing.
   .sample {
     width: 1.6em;
     font-size: 17px;
@@ -1147,7 +1121,6 @@ input[type="range"] {
     }
   }
 
-  // Focus ring on the knob, not the track.
   outline: none;
 
   &:focus-visible::-webkit-slider-thumb {
@@ -1163,7 +1136,7 @@ input[type="range"] {
   }
 }
 
-// Fit and Reset fade in and out; display transitions via allow-discrete.
+// display transitions need allow-discrete.
 .fit,
 .reset,
 #fit,
@@ -1224,14 +1197,12 @@ input[type="range"] {
   }
 }
 
-// Sheet: fills the height under the bar; line and columns centered, legend at the foot.
 .sheet {
   position: relative;
   display: flex;
   flex-direction: column;
   padding-top: 56px;
   min-width: 0;
-  // Hidden until the face loads and the line fits, to avoid a resize flash.
   opacity: 0;
   transition: opacity var(--duration-enter) var(--ease-out);
 
@@ -1259,9 +1230,7 @@ input[type="range"] {
   white-space: nowrap;
   text-wrap: balance;
   padding-right: 0.06em;
-  // Horizontal drag scrambles; vertical still scrolls.
   touch-action: pan-y;
-  // No selection or copy callout on touch.
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -1282,7 +1251,7 @@ input[type="range"] {
   }
 }
 
-// Offscreen clone that measures the line at full size; fixed so it can't widen the page.
+// Fixed, so it can't widen the page.
 .probe {
   position: fixed;
   top: 0;
@@ -1293,7 +1262,6 @@ input[type="range"] {
   pointer-events: none;
 }
 
-// Measuring bracket: moves and scales by transform only.
 .meter {
   position: absolute;
   inset: 0 0 auto;
@@ -1349,7 +1317,6 @@ input[type="range"] {
 
 .cols {
   position: relative;
-  // Rows plus the bracket above and count below, so the count clears the legend.
   height: calc(var(--pool-size) * 1.18 * var(--rows, 8) + 60px);
   margin-top: 14px;
   margin-bottom: 32px;
@@ -1380,7 +1347,6 @@ input[type="range"] {
   font-variation-settings: "opsz" 24;
   line-height: 1.18;
   color: var(--pool);
-  // Glides by transform; width snaps under the bracket.
   transition:
     transform var(--duration-move) var(--ease-out),
     color var(--duration-base) var(--ease-out),
@@ -1472,7 +1438,6 @@ input[type="range"] {
 
   transition: color var(--duration-settle) var(--ease-out);
 
-  // Pulls in while the letter scrambles, springs out on landing.
   &::before {
     content: "";
     position: absolute;
@@ -1527,7 +1492,6 @@ input[type="range"] {
   color: var(--text-muted);
 }
 
-// Index: replaces the columns under a small line.
 .index {
   display: none;
   -webkit-user-select: none;
@@ -1541,8 +1505,6 @@ input[type="range"] {
   }
 
   .index {
-    // One-width columns, centered, at most half the width so a phone fits two.
-    // Type scales with window height.
     display: grid;
     grid-template-columns: repeat(auto-fill, min(12.5em, calc(50% - 2px)));
     font-size: clamp(13px, 1.45vh, 18px);
@@ -1552,20 +1514,18 @@ input[type="range"] {
   }
 }
 
-// Two-row line keeps two rows even when it fits on one, so the index doesn't jump.
+// Keeps two rows even when it fits on one, so the index doesn't jump.
 .sheet.split > #stage {
   min-height: 1.8em;
 }
 
-// Stacked (<1000px, mirrors `stacked` in main.ts): the line holds a fixed distance under
-// the bar and the index grows down from it.
+// Stacked (<1000px). Mirrors `stacked` in main.ts.
 @media (max-width: 999px) {
   .sheet.indexed > #stage {
     margin-top: 0;
   }
 }
 
-// Wide (>=1000px): line left, index right, legend across both.
 @media (min-width: 1000px) {
   .sheet.indexed {
     display: grid;
@@ -1654,8 +1614,6 @@ input[type="range"] {
   }
 }
 
-// Two-row index is a table, one row per letter. Rows share spare height up to a cap,
-// type fits the longest look-alike row, margins shrink on short screens.
 .split {
   container-type: inline-size;
 
@@ -1687,8 +1645,6 @@ input[type="range"] {
       border-bottom: 0;
     }
 
-    // Lit row lifts like the bar. Negative margin reaches into the page margin;
-    // padding keeps the letters in place.
     &.hot {
       position: relative;
       z-index: 1;
@@ -1709,7 +1665,6 @@ input[type="range"] {
       font-size: 1.6em;
     }
 
-    // Keep on one line so three figures fit the column.
     .about {
       white-space: nowrap;
     }
@@ -1730,7 +1685,6 @@ input[type="range"] {
   }
 }
 
-// Legend: key left, hints right; hints wrap under the key when narrow.
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -1774,12 +1728,10 @@ input[type="range"] {
   }
 }
 
-// Pause control; the sign swaps bars for a triangle when paused.
 .pause {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  // Spacing comes from the preceding word space, so it starts at the text edge when wrapped.
   color: var(--text-muted);
   white-space: nowrap;
   transition:
@@ -1833,7 +1785,6 @@ input[type="range"] {
   }
 }
 
-// Phone (<700px): tighter spacing on short screens so the page fits without scrolling.
 @include phone {
   .top {
     padding-top: clamp(12px, 4svh - 10px, 24px);
@@ -1848,7 +1799,6 @@ input[type="range"] {
     width: 100%;
   }
 
-  // Phone: the index runs to the foot; the legend is hidden since the index explains itself.
   .sheet {
     padding-top: clamp(16px, 6svh - 16px, 40px);
 
@@ -1861,7 +1811,6 @@ input[type="range"] {
     }
   }
 
-  // The bar scrolls away on a phone.
   .dock {
     position: relative;
     top: auto;

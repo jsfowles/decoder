@@ -10,7 +10,6 @@ body {
 }
 
 body {
-  // svh in Safari; Arc's svh runs under its floating toolbar, so dvh caps it.
   min-height: min(100svh, 100dvh);
   background: var(--bg);
   color: var(--text);
@@ -58,7 +57,6 @@ a {
   display: none !important;
 }
 
-// Rings fade in rather than blink.
 :where(a, button, input, select, textarea, [tabindex]) {
   outline: 1px solid transparent;
   outline-offset: 4px;
@@ -73,12 +71,11 @@ input {
   caret-color: var(--text);
 }
 
-// Keep tabbed-to elements clear of the sticky bar.
+// Keeps what you tab to clear of the sticky bar.
 html {
   scroll-padding-top: 88px;
 }
 
-// Skip link: first tab stop.
 .skip {
   position: fixed;
   top: 12px;
@@ -101,7 +98,6 @@ html {
   }
 }
 
-// Grain sits behind all content; ink stays untextured.
 body::before {
   content: "";
   position: fixed;

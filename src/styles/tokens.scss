@@ -20,9 +20,8 @@
   --text-body: calc(0.9375rem * var(--text-scale));
   --text-title: calc(1.125rem * var(--text-scale));
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  // Slight overshoot for the bracket landing.
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
-  // Durations by role. main.ts and src/ui/*.ts hardcode some of these; keep in sync.
+  // main.ts and src/ui/*.ts hardcode some of these durations; keep in sync.
   --duration-fast: 150ms;
   --duration-base: 240ms;
   --duration-follow: 280ms;
@@ -30,22 +29,18 @@
   --duration-settle: 420ms;
   --duration-move: 520ms;
   --focus-fade: outline-color var(--duration-fast) var(--ease-out);
-  // Raised surfaces, lit from the top left. The bar frosts over the scrolling sheet.
   --bar-glass: rgb(243 243 240 / 0.86);
   // Black alpha shade: a grey one would lighten the letters under it.
   --shadow-raised: 5px 5px 14px rgb(0 0 0 / 0.075), -5px -5px 14px #ffffff;
-  // Panel opens over the line: drawn-in lit edge plus a firmer shadow.
   --shadow-panel:
     inset 1px 1px 0 rgb(255 255 255 / 0.95),
     inset -1px -1px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(0 0 0 / 0.06),
     5px 5px 14px rgb(0 0 0 / 0.075), 0 20px 40px -16px rgb(0 0 0 / 0.22);
-  // Fractal noise, desaturated, 20% opacity. Fixed so the page and raised surfaces share one grain.
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.2'/%3E%3C/svg%3E")
     0 0 / 180px 180px fixed;
   --edge: 56px;
-  // Set by the page to fit the line.
   --line: 168px;
-  // Scales with the line and window height. main.ts cell() mirrors it.
+  // main.ts cell() mirrors this.
   --pool-size: clamp(9px, min(var(--line) * 0.2, 2.4vh), 28px);
   color-scheme: light;
 
